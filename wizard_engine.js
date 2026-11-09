@@ -1190,6 +1190,19 @@ const REAL_WORLD_CARTRIDGE_LIBRARY = [
     maxPenDist: 100
   },
   {
+    id: "t6b_p90",
+    group: "PDW & Pistol",
+    name: "5.7x28mm Elite Ammo T6B Solid Copper AP — P90 10.4\" bbl (1.81g / 28gr @ 930 m/s)",
+    massGrams: 1.81,
+    diamMM: 5.70,
+    muzzleVel: 930,
+    bc: 0.139,
+    dragModel: 1,
+    profile: "0.88",
+    armorLevel: "3",
+    maxPenDist: 55
+  },
+  {
     id: "sb193_p90",
     group: "PDW & Pistol",
     name: "5.7x28mm FN SB193 Subsonic — P90 10.4\" bbl (3.6g / 55gr @ 305 m/s)",
@@ -1839,7 +1852,7 @@ function renderTunerPenetrationMatrix(roundToEval) {
       statusText = `<span style="color:#fbbf24;font-weight:700;">Penetrates to ${maxDist}m</span>`;
     }
 
-    return `<div class="pen-matrix-row ${isTarget}">
+    return `<div class="pen-matrix-row ${isTarget}" style="cursor:pointer;" title="Click to target ${row.label} in the tuner" onclick="window.selectTunerArmorLevel('${row.id}')">
       <span>${row.label}</span>
       <div class="pen-bar-track">
         <div class="pen-bar-fill" style="width:${pct.toFixed(1)}%;background:${barColor};"></div>
@@ -1848,6 +1861,18 @@ function renderTunerPenetrationMatrix(roundToEval) {
     </div>`;
   }).join("");
 }
+
+window.selectTunerArmorLevel = function(lvlId) {
+  const sel = document.getElementById("rwArmorGoalLevel");
+  if (!sel) return;
+  sel.value = String(lvlId);
+  const distInp = document.getElementById("rwArmorMaxDist");
+  if (distInp && (parseFloat(distInp.value) || 0) <= 0) {
+    distInp.value = "50";
+    document.getElementById("rwArmorMaxDistSlider").value = "50";
+  }
+  updateTunerPreviewAndOutputs(document.getElementById("chkRwLiveSync").checked);
+};
 
 function renderTunerDiffBar(previewRound) {
   const container = document.getElementById("rwDiffPills");
@@ -1929,13 +1954,19 @@ function filterAndPopulateRoundSelect() {
   });
 
   const currentCls = appState.currentRound ? appState.currentRound.className : "";
-  sel.innerHTML = filtered.map((r, i) => {
+  const stillPresent = filtered.some(r => r.className === currentCls);
+  const activeCls = stillPresent ? currentCls : (filtered[0] ? filtered[0].className : "");
+
+  sel.innerHTML = filtered.map(r => {
     const label = r.magName ? `${r.className} — ${r.magName} [${r.mod}]` : `${r.className} [${r.mod}]`;
-    const isSel = r.className === currentCls ? "selected" : "";
+    const isSel = r.className === activeCls ? "selected" : "";
     return `<option value="${r.className}" ${isSel}>${label}</option>`;
   }).join("");
 
   document.getElementById("roundCountBadge").textContent = `${filtered.length} rounds`;
+  if (!stillPresent && activeCls) {
+    selectRoundByClass(activeCls);
+  }
 }
 
 function filterAndPopulateGearSelect(cat, selectId, modFilterId, searchId, currentItem, includeNone = true) {
