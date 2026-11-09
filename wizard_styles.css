@@ -734,6 +734,84 @@ pre.config-export {
   text-transform: uppercase;
 }
 
+.armor-tier-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 5px;
+}
+
+@media (max-width: 1400px) {
+  .armor-tier-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.armor-tier-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  position: relative;
+  text-align: center;
+  transition: all 0.12s ease;
+}
+
+.armor-tier-card:hover {
+  border-color: var(--border-bright);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.armor-tier-card.active {
+  background: rgba(234, 179, 8, 0.18);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.35);
+}
+
+.armor-tier-card .tier-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.armor-tier-card.active .tier-title {
+  color: var(--accent);
+}
+
+.armor-tier-card .tier-sub {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  line-height: 1.15;
+}
+
+.armor-tier-card .tier-equipped-tag {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  margin-top: 2px;
+}
+
+.pen-bar-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: #facc15;
+  box-shadow: 0 0 4px #facc15;
+  z-index: 2;
+  pointer-events: none;
+}
+
 .pen-matrix-list {
   display: flex;
   flex-direction: column;

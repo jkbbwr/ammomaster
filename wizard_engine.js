@@ -1709,10 +1709,11 @@ function updateTunerPreviewAndOutputs(applyToActiveRound = false) {
     document.getElementById("rwHitInput").value = solvedHit.toFixed(2);
   }
 
-  // Unarmored torso shots-to-kill estimate (against base armor = 2.0)
-  const unarmoredTorsoDmg = solvedHit / 2.0 / 10.0 * 2.0; // engineDamage = solvedHit / 2.0
-  const unarmoredStk = Math.max(1, Math.ceil(1.5 / Math.max(0.1, solvedHit / 2.0)));
-  document.getElementById("rwUnarmoredStkBadge").textContent = `Unarmored Torso: ~${unarmoredStk} shot${unarmoredStk > 1 ? "s" : ""} (hit=${solvedHit.toFixed(1)})`;
+  // Full-penetration ACE wound damage (hit / 10) & torso trauma shots-to-kill (threshold = 1.50)
+  const fullPenWoundDmg = solvedHit / ACE_CONST.DAMAGE_SCALING_FACTOR;
+  const torsoStk = Math.max(1, Math.ceil((1.5 * appState.damageThreshold) / Math.max(0.05, fullPenWoundDmg)));
+  document.getElementById("rwUnarmoredStkBadge").textContent =
+    `Max Wound Dmg: ${fullPenWoundDmg.toFixed(2)} (~${torsoStk} torso hit${torsoStk > 1 ? "s" : ""} kill)`;
 
   // 3. Solve 'caliber' from Armor Penetration Goal & Max Distance
   const goalLevelStr = document.getElementById("rwArmorGoalLevel").value;
@@ -1799,7 +1800,8 @@ function updateTunerPreviewAndOutputs(applyToActiveRound = false) {
     }).join("");
   }
 
-  // Render Live 5-Level Armor Penetration Matrix & Diff Bar
+  // Render Armor Tier Cards, Live 5-Level Armor Penetration Matrix & Diff Bar
+  renderTunerArmorTierCards();
   renderTunerPenetrationMatrix(previewRound);
   renderTunerDiffBar(previewRound);
 
@@ -1810,12 +1812,54 @@ function updateTunerPreviewAndOutputs(applyToActiveRound = false) {
   }
 }
 
+function renderTunerArmorTierCards() {
+  const grid = document.getElementById("rwArmorTierGrid");
+  if (!grid) return;
+  const goalLevelStr = (document.getElementById("rwArmorGoalLevel") && document.getElementById("rwArmorGoalLevel").value) || "3";
+
+  // Check what armor level is currently equipped on the active hitzone
+  const evActive = evaluateShot(appState.currentRound || {}, appState.armorLoadout, appState.selectedHitpoint, 0, {
+    alternateArmorPen: true
+  });
+  const equippedLevel = evActive.aceArmorLevel || 0; // 0..5
+  const hpShort = appState.selectedHitpoint.replace("Hit", "");
+
+  const tiers = [
+    { id: "0", title: "Unarmored", sub: "Flesh Only" },
+    { id: "1", title: "Level I", sub: "6mm · IIA Soft" },
+    { id: "2", title: "Level II", sub: "15mm · IIIA Soft" },
+    { id: "3", title: "Level III", sub: "21mm · NIJ III" },
+    { id: "4", title: "Level IV", sub: "40mm · NIJ IV" },
+    { id: "5", title: "Level V", sub: "55mm · Heavy" }
+  ];
+
+  grid.innerHTML = tiers.map(t => {
+    const isActive = goalLevelStr === t.id || (goalLevelStr === "active" && String(equippedLevel) === t.id);
+    const isEquipped = String(equippedLevel) === t.id;
+    const eqBadge = isEquipped
+      ? `<span class="tier-equipped-tag" title="Your currently selected ${hpShort} armor is at this level">ON ${hpShort.toUpperCase()}</span>`
+      : "";
+    return `<div class="armor-tier-card ${isActive ? "active" : ""}" onclick="window.selectTunerArmorLevel('${t.id}')">
+      <span class="tier-title">${t.title}</span>
+      <span class="tier-sub">${t.sub}</span>
+      ${eqBadge}
+    </div>`;
+  }).join("");
+}
+
 function renderTunerPenetrationMatrix(roundToEval) {
   const container = document.getElementById("rwPenMatrixContainer");
   if (!container || !roundToEval) return;
 
   const criterion = (document.getElementById("rwPenCriterion") && document.getElementById("rwPenCriterion").value) || "ace_bleed";
   const goalLevelStr = (document.getElementById("rwArmorGoalLevel") && document.getElementById("rwArmorGoalLevel").value) || "3";
+  const curRange = Math.max(0, Number(appState.rangeMeters) || 0);
+  const markerPct = Math.max(0, Math.min(99.5, (curRange / 800) * 100));
+
+  const legendEl = document.getElementById("rwMatrixRangeLegend");
+  if (legendEl) {
+    legendEl.innerHTML = `&#9474; Yellow Marker = Active Range (${Math.round(curRange)}m)`;
+  }
 
   const rowsSpec = [
     { id: "1", label: "ACE Lvl I (6mm Soft)", rha: 6 },
@@ -1840,22 +1884,25 @@ function renderTunerPenetrationMatrix(roundToEval) {
   container.innerHTML = rowsSpec.map(row => {
     const maxDist = computeMaxPlatePenRange(roundToEval, row.rha, criterion);
     const pct = Math.max(0, Math.min(100, (maxDist / 800) * 100));
-    const isTarget = row.id === goalLevelStr ? "active-target" : "";
+    const isTarget = row.id === goalLevelStr || (row.id === "active" && String(evActive0.aceArmorLevel) === goalLevelStr)
+      ? "active-target"
+      : "";
 
     let barColor = "#22c55e";
     let statusText = `<span style="color:#4ade80;font-weight:700;">Penetrates to ${maxDist}m</span>`;
     if (maxDist <= 0) {
       barColor = "#38bdf8";
       statusText = `<span style="color:#38bdf8;">STOPPED @ 0m (Bruise)</span>`;
-    } else if (maxDist < 100) {
+    } else if (maxDist < curRange) {
       barColor = "#f59e0b";
-      statusText = `<span style="color:#fbbf24;font-weight:700;">Penetrates to ${maxDist}m</span>`;
+      statusText = `<span style="color:#fbbf24;font-weight:700;">Pen to ${maxDist}m (Stop @ ${Math.round(curRange)}m)</span>`;
     }
 
     return `<div class="pen-matrix-row ${isTarget}" style="cursor:pointer;" title="Click to target ${row.label} in the tuner" onclick="window.selectTunerArmorLevel('${row.id}')">
       <span>${row.label}</span>
       <div class="pen-bar-track">
         <div class="pen-bar-fill" style="width:${pct.toFixed(1)}%;background:${barColor};"></div>
+        <div class="pen-bar-marker" style="left:${markerPct.toFixed(1)}%;" title="Current Engagement Range: ${Math.round(curRange)}m"></div>
       </div>
       <div style="text-align:right;">${statusText}</div>
     </div>`;
@@ -1983,14 +2030,22 @@ function filterAndPopulateGearSelect(cat, selectId, modFilterId, searchId, curre
   });
 
   const curCls = currentItem ? currentItem.className : "__NONE__";
-  let html = includeNone ? `<option value="__NONE__" ${curCls === "__NONE__" ? "selected" : ""}>— None (Unarmored) —</option>` : "";
+  const stillPresent = curCls === "__NONE__" ? includeNone : filtered.some(x => x.className === curCls);
+  const activeCls = stillPresent ? curCls : (filtered[0] ? filtered[0].className : (includeNone ? "__NONE__" : ""));
+
+  let html = includeNone ? `<option value="__NONE__" ${activeCls === "__NONE__" ? "selected" : ""}>— None (Unarmored) —</option>` : "";
   html += filtered.map(x => {
     const desc = x.description ? ` (${x.description})` : "";
     const label = `${x.displayName || x.className}${desc} [${x.mod}] — ${x.className}`;
-    const isSel = x.className === curCls ? "selected" : "";
+    const isSel = x.className === activeCls ? "selected" : "";
     return `<option value="${x.className}" ${isSel}>${label}</option>`;
   }).join("");
   sel.innerHTML = html;
+
+  if (!stillPresent && activeCls) {
+    const slot = cat === "vests" ? "vest" : (cat === "helmets" ? "helmet" : "uniform");
+    selectGearByClass(slot, activeCls);
+  }
 }
 
 function selectRoundByClass(className) {
@@ -2274,6 +2329,7 @@ function updateAllViews() {
   renderAllHitzonesComparisonTable();
   renderAllCharts();
   renderConfigExporter();
+  renderTunerArmorTierCards();
   renderTunerPenetrationMatrix(tunerState.lastSolvedRound || appState.currentRound);
   renderTunerDiffBar(tunerState.lastSolvedRound || appState.currentRound);
 
@@ -2609,6 +2665,20 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Armor Penetration Goal & Max Range Slider
   document.getElementById("rwArmorGoalLevel").addEventListener("change", triggerTuner);
+  const matchEqBtn = document.getElementById("btnRwMatchEquipped");
+  if (matchEqBtn) {
+    matchEqBtn.addEventListener("click", () => {
+      const evActive = evaluateShot(appState.currentRound || {}, appState.armorLoadout, appState.selectedHitpoint, 0, {
+        alternateArmorPen: true
+      });
+      const eqLvl = evActive.aceArmorLevel || 0;
+      document.getElementById("rwArmorGoalLevel").value = String(eqLvl);
+      const targetRange = Math.max(10, Math.round(appState.rangeMeters || 100));
+      document.getElementById("rwArmorMaxDist").value = targetRange;
+      document.getElementById("rwArmorMaxDistSlider").value = Math.min(800, targetRange);
+      triggerTuner();
+    });
+  }
   document.getElementById("rwArmorMaxDistSlider").addEventListener("input", e => {
     document.getElementById("rwArmorMaxDist").value = e.target.value;
     triggerTuner();

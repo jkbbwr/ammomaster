@@ -605,10 +605,16 @@ __STYLES__
                 </div>
               </div>
 
-              <!-- Armor Penetration Goal Selector -->
+              <!-- Armor Penetration Goal Selector (Visual Tier Cards) -->
               <div class="field">
-                <label>Highest Armor Level This Round Should Penetrate</label>
-                <select id="rwArmorGoalLevel">
+                <label>
+                  <span>Highest Armor Level This Round Should Penetrate (Click Tier)</span>
+                  <button type="button" id="btnRwMatchEquipped" style="padding:2px 7px;font-size:10px;border-color:rgba(56,189,248,0.5);color:#38bdf8;" title="Set target armor level and distance to match your currently equipped vest/helmet and engagement range">
+                    Target Equipped Gear &amp; Range
+                  </button>
+                </label>
+                <div class="armor-tier-grid" id="rwArmorTierGrid"></div>
+                <select id="rwArmorGoalLevel" style="display:none;">
                   <option value="0">Unarmored Only — Stopped by Level I Soft Armor @ 0m (Contusion Only)</option>
                   <option value="1">ACE Level I — Light Soft Armor / Pistol Vest (6 mm RHAe)</option>
                   <option value="2">ACE Level II — NIJ IIIA / CRISAT Soft + Titanium (15 mm RHAe)</option>
@@ -622,7 +628,7 @@ __STYLES__
               <!-- Max Penetration Distance Slider -->
               <div class="field" id="rwMaxPenDistField">
                 <label>
-                  <span>Max Penetration Distance Against Selected Armor</span>
+                  <span>Max Penetration Distance Against Selected Armor Tier</span>
                   <span style="display:flex;align-items:center;gap:4px;">
                     <input type="number" id="rwArmorMaxDist" value="150" min="0" max="1500" step="10" style="width:68px;padding:2px 5px;text-align:right;" />
                     <span>m</span>
@@ -652,7 +658,7 @@ __STYLES__
               <div style="margin-top:2px;">
                 <div style="display:flex;justify-content:space-between;font-size:10.5px;font-weight:600;color:var(--text-dim);margin-bottom:4px;">
                   <span>Live ACE3 Armor Penetration Range Matrix</span>
-                  <span style="font-family:var(--font-mono);color:var(--text-muted);">Max Range Before Plate Stops Round</span>
+                  <span style="font-family:var(--font-mono);color:#facc15;" id="rwMatrixRangeLegend">&#9474; Yellow Line = Current Range (100m)</span>
                 </div>
                 <div class="pen-matrix-list" id="rwPenMatrixContainer"></div>
               </div>
