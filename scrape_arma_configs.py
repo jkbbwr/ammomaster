@@ -506,8 +506,9 @@ def main():
         res_weap = resolve_tree(cfg_weapons)
         res_veh = resolve_tree(cfg_vehicles)
 
-        # Map ammo -> magazine info
+        # Map ammo -> primary magazine info + all scope=2 magazine classes using that ammo
         ammo_to_mag = {}
+        ammo_to_all_mags = {}
         for mname, mdata in res_mag.items():
             if not isinstance(mdata, dict):
                 continue
@@ -519,15 +520,23 @@ def main():
             init_spd = to_float(get_ci(mdata, "initSpeed"), 0)
             disp = localize(get_ci(mdata, "displayName", ""), strings)
             scope = to_int(get_ci(mdata, "scope"), 0)
+            mparent = mdata.get("__parent", "CA_Magazine")
+            if not isinstance(mparent, str) or not mparent:
+                mparent = "CA_Magazine"
             al = ammo_cls.lower()
             if al not in ammo_to_mag or (scope == 2 and ammo_to_mag[al]["scope"] != 2) or (disp and not ammo_to_mag[al]["magName"]):
                 ammo_to_mag[al] = {
                     "magClass": mname,
+                    "magParent": mparent,
                     "magName": disp,
                     "initSpeed": init_spd,
                     "scope": scope,
                     "mod": mdata.get("__mod", "Vanilla")
                 }
+            if scope >= 1 and not mname.lower().endswith("_base"):
+                lst = ammo_to_all_mags.setdefault(al, [])
+                if len(lst) < 12 and not any(x["c"] == mname for x in lst):
+                    lst.append({"c": mname, "p": mparent, "s": scope})
 
         # Extract rounds
         rounds_out = []
@@ -569,10 +578,16 @@ def main():
             if mod_label == "Vanilla" and mag_info.get("mod") and mag_info["mod"] != "Vanilla":
                 mod_label = mag_info["mod"]
 
+            all_mags = ammo_to_all_mags.get(cname.lower(), [])
+            scope2_mags = [m for m in all_mags if m["s"] == 2]
+            chosen_mags = scope2_mags if scope2_mags else all_mags[:4]
+
             entry = {
                 "className": cname,
                 "mod": mod_label,
                 "parent": cdata.get("__parent", "BulletBase"),
+                "magClass": mag_info.get("magClass", ""),
+                "magParent": mag_info.get("magParent", "CA_Magazine"),
                 "magName": mag_info.get("magName", ""),
                 "hit": round(hit, 4),
                 "indirectHit": round(to_float(get_ci(cdata, "indirectHit"), 0), 4),
@@ -595,6 +610,9 @@ def main():
                 arr = get_ci(cdata, ace_arr)
                 if isinstance(arr, list) and len(arr) > 0:
                     entry[ace_arr] = [round(to_float(x), 4) for x in arr if to_float(x) > 0]
+
+            if chosen_mags:
+                entry["mags"] = [{"c": m["c"], "p": m["p"]} for m in chosen_mags[:8]]
 
             rounds_out.append(entry)
 
@@ -650,12 +668,25 @@ def main():
             desc = re.sub(r"<[^>]+>", "", desc).strip()
             mass_val = round(to_float(get_ci(ii, "mass"), 0), 2)
             mod_name = cdata.get("__mod", "Vanilla")
+            w_parent = cdata.get("__parent", "")
+            p_res = get_ci(res_weap, w_parent) if w_parent else None
+            parent_base = p_res.get("__parent", "") if isinstance(p_res, dict) else ""
+            if not isinstance(parent_base, str):
+                parent_base = ""
+            parent_has_ii = isinstance(get_ci(p_res, "ItemInfo") if isinstance(p_res, dict) else None, dict)
+            raw_cls = get_ci(cfg_weapons, cname)
+            raw_ii = get_ci(raw_cls, "ItemInfo") if isinstance(raw_cls, dict) else None
+            raw_ii_p = raw_ii.get("__parent") if isinstance(raw_ii, dict) else None
 
             if itype == 701 or any(x in chain_lower for x in ["vest_camo_base", "vest_nocamo_base", "vest_base"]):
                 hpi = extract_hpi(ii)
                 if hpi or itype == 701:
+                    ii_p_out = raw_ii_p if (isinstance(raw_ii_p, str) and raw_ii_p and raw_ii_p.lower() != "iteminfo") else ("ItemInfo" if parent_has_ii else "VestItem")
                     vests_out.append({
                         "className": cname,
+                        "parent": w_parent or "Vest_Camo_Base",
+                        "parentBase": parent_base,
+                        "iiParent": ii_p_out,
                         "displayName": dname,
                         "mod": mod_name,
                         "description": desc,
@@ -665,8 +696,12 @@ def main():
             if itype == 605 or any(x in chain_lower for x in ["h_helmetb", "helmetbase"]):
                 hpi = extract_hpi(ii)
                 if hpi or cname.upper().startswith(("H_HELMET", "MIG_", "JCA_H_")):
+                    ii_p_out = raw_ii_p if (isinstance(raw_ii_p, str) and raw_ii_p and raw_ii_p.lower() != "iteminfo") else ("ItemInfo" if parent_has_ii else "HeadgearItem")
                     helmets_out.append({
                         "className": cname,
+                        "parent": w_parent or "H_HelmetB",
+                        "parentBase": parent_base,
+                        "iiParent": ii_p_out,
                         "displayName": dname,
                         "mod": mod_name,
                         "description": desc,

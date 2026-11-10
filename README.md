@@ -11,14 +11,15 @@ A standalone, zero-dependency interactive ballistics, armor penetration, and ACE
   - **287 Vests (`CfgWeapons`)**: Aegis, Atlas, Project M (Ferro FCPC, Bison, JPC, TYR), JCA Equipment, AddGis, Vanilla & DLCs, Revolución, Athena.
   - **262 Helmets (`CfgWeapons`)**: Aegis, Atlas, Project M (Airframe, FTHS, Galvion, SFHC), AddGis, JCA Equipment, Vanilla & DLCs, Athena, Revolución, ACE3.
   - **168 Uniforms (`CfgWeapons` -> `CfgVehicles` `HitPoints`)**: Full 11-hitpoint character armor and passThrough configurations.
-- **Authentic Base Arma 3 + ACE3 Medical Damage Pipeline**:
-  - Models Vanilla Arma 3 RHAe penetration (`v_impact * caliber * 0.015 mm`), hitpoint armor, and structural damage alongside `ace_medical_engine` (`#9063` logarithmic armor scaling) and `ace_medical_damage` (`fnc_woundsHandlerArmorPenetration` Levels I–V `[6, 15, 21, 40, 55] mm` RHAe, `0.35` plate penetration threshold, wound type weighting, bleeding cardiac output, pain, fractures, vital organ hits, and Weibull trauma fatality).
+- **Validated Base Arma 3 + ACE 3.21.2 Ballistics & Medical Pipeline**:
+  - Exact GNU Exterior Ballistics G1–G8 retardation curves (`ace_advanced_ballistics_fnc_calculateRetardation`) alongside vanilla exponential `airFriction`.
+  - Exact `ace_medical_engine` (`fnc_getItemArmor` strict hitpoint matching & `#9063` `log10` over-cap scaling), `ace_medical_damage` (`fnc_woundsHandlerArmorPenetration` Levels I–V `[6, 15, 21, 40, 55] mm` RHAe, `0.35` plate penetration threshold, fractional wound counts, symmetric triangular `random [0.9, 1, 1.1]` wound variance), and `ace_medical_status` (`fnc_handleIncapacitation` head/penetrating-torso KO thresholds + 10% pain KO roll, `fnc_adjustPainLevel` max rule, per-limb bleeding caps, healthy `126.7 mL/s` cardiac output, and Weibull trauma fatality).
 - **Interactive ACE3 Medical Menu Body Dummy**:
   - Uses authentic 256×256 textures extracted from `ace_medical_gui.pbo` with live blood-loss/trauma tinting, bone fractures, tourniquets, and both deterministic 1-shot preview and stochastic multi-shot live firing range modes.
-- **Intuitive Real-World Round Tuner**:
-  - Built-in library of 24 real-world military/duty loads (`5.7x28mm SS190`, `M855A1`, `M80A1`, `7N22`, `7N39`, `XM1186`, `.338 LM`, etc.) with dual-unit linked inputs (`g ↔ gr`, `mm ↔ in`, `m/s ↔ fps`).
-  - Solves `airFriction` and `ACE_ballisticCoefficients` from either published G1/G7 BC or downrange velocity.
-  - Interactive max armor penetration distance slider with a live 5-level ACE3 armor penetration range matrix and ready-to-paste `CfgAmmo` / `CfgMagazines` `.hpp` config exporter.
+- **Streamlined 3-Card Round & Custom Vest Balancing Workbench**:
+  - **Balance vs Armor**: Target your equipped vest/helmet, standard ACE Levels I–V, or a custom mm RHAe plate; set penetration cutoff distance across 4 criteria (ACE bleed, 100% RHAe, 1-shot torso KO, heart-shot capable) and lock penetration distance while tuning terminal flesh `hit` (with Bohemia Interactive `√KE / 5` energy profiles).
+  - **181-Load Real-World Cartridge Catalogue (`real_world_catalog.js`)**: Verified SAAMI/CIP/MIL-DTL/GRAU/manufacturer specs across 10 caliber families with automatic physics discrepancy detection (`initSpeed`, `typicalSpeed`, `ACE_muzzleVelocities[]`, bullet mass, G1/G7 BC), dual-unit linked inputs (`g ↔ gr`, `mm ↔ in`, `m/s ↔ fps`), and 1-click **Apply RW Spec**.
+  - **Session Persistence & HEMTT-Verified Batch `.hpp` Exporter**: Drag any armor row's bar directly (`0–1000m`) to live-solve `caliber`, tune multiple rounds/vests/helmets in a single session, scale `ACE_muzzleVelocities[]` proportionally, and export topologically sorted `CfgAmmo`, real `CfgMagazines`, and `CfgWeapons` (`ItemInfo >> HitpointsProtectionInfo`) patches.
 
 ## Rebuilding Locally
 
