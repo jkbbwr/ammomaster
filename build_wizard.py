@@ -42,10 +42,16 @@ __STYLES__
         <input type="checkbox" id="chkAdvBallistics" />
         <span>ACE3 G1–G8 Drag</span>
       </label>
-      <label class="hdr-toggle" id="lblColorblindToggle" title="Okabe–Ito colorblind-safe high-contrast palette (Cyan / Gold / Magenta + shape &amp; pattern cues)">
-        <input type="checkbox" id="chkColorblindMode" />
-        <span>CB Safe</span>
-      </label>
+      <div class="hdr-inline-select" id="wrapColorVisionMode" title="Scientifically tuned Color Vision Deficiency (CVD) palettes + shape/pattern cues">
+        <span>Vision</span>
+        <select id="selColorVisionMode" aria-label="Color Vision Palette">
+          <option value="default">Standard</option>
+          <option value="deuteranopia">Deuteranopia (Red-Green)</option>
+          <option value="protanopia">Protanopia (Red-Weak)</option>
+          <option value="tritanopia">Tritanopia (Blue-Yellow)</option>
+          <option value="achromatopsia">Monochromacy (Hi-Contrast)</option>
+        </select>
+      </div>
       <div class="hdr-inline-num" title="ACE3 playerDamageThreshold / AIDamageThreshold">
         <span>Trauma Mult</span>
         <input type="number" id="inpDamageThreshold" value="1.0" min="0.2" max="10" step="0.1" />
@@ -153,7 +159,7 @@ __STYLES__
                 <span class="rw-match-title" id="ovRwMatchName">Real-World Match: —</span>
                 <span class="badge badge-amber" id="ovRwMismatchBadge" style="display:none;">Physics Diff</span>
               </div>
-              <div id="ovRwWarningDetail" style="display:none;font-size:10px;color:#fdba74;font-family:var(--font-mono);line-height:1.35;"></div>
+              <div id="ovRwWarningDetail" style="display:none;font-size:10px;color:var(--warn-text, #fdba74);font-family:var(--font-mono);line-height:1.35;"></div>
               <div class="rw-match-actions">
                 <span style="font-size:10.5px;color:var(--text-muted);" id="ovKineticBadge">Muzzle KE: 0 J</span>
                 <div style="display:flex;gap:5px;align-items:center;">
@@ -454,7 +460,7 @@ __STYLES__
             <div class="pen-matrix-wrap">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
                 <span style="font-size:10.5px;color:var(--text-dim);">
-                  <strong>&#8596; Drag any bar</strong> or type meters (<span style="color:#94a3b8;">&#9474; Gray = Original</span> · <span style="color:#facc15;" id="rwMatrixRangeLegend">&#9474; Test: 100m</span>)
+                  <strong>&#8596; Drag any bar</strong> or type meters (<span style="color:#94a3b8;">&#9474; Gray = Original</span> · <span style="color:var(--marker-line, var(--accent-hi));" id="rwMatrixRangeLegend">&#9474; Test: 100m</span>)
                 </span>
                 <select id="rwPenCriterion" style="width:auto;padding:2px 6px;font-size:10.5px;">
                   <option value="ace_bleed" selected>Goal: Penetrate &amp; Bleed (&gt; 0.35)</option>
@@ -676,7 +682,7 @@ __STYLES__
           <div class="field">
             <label>
               <span>Click Any HitPoint or Dummy Limb</span>
-              <span style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);">&#9679; Red=Pen &#9679; Blue=Stop</span>
+              <span id="hitzoneLegendLabel" style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);">&#9679; Red=Pen &#9679; Blue=Stop</span>
             </label>
             <div class="hitzone-grid" id="hitzoneGrid"></div>
           </div>
@@ -811,28 +817,28 @@ __STYLES__
             <div class="chart-box">
               <div class="chart-title">
                 <span>1. Velocity Decay vs Range (m/s)</span>
-                <span id="chtSubVel" style="color:#38bdf8;font-family:var(--font-mono);"></span>
+                <span id="chtSubVel" style="color:var(--ace-blue);font-family:var(--font-mono);"></span>
               </div>
               <canvas id="chartVelocity" class="chart-canvas"></canvas>
             </div>
             <div class="chart-box">
               <div class="chart-title">
                 <span>2. RHAe Penetration vs Plate Thickness (mm)</span>
-                <span id="chtSubPen" style="color:#eab308;font-family:var(--font-mono);"></span>
+                <span id="chtSubPen" style="color:var(--accent-hi);font-family:var(--font-mono);"></span>
               </div>
               <canvas id="chartPenetration" class="chart-canvas"></canvas>
             </div>
             <div class="chart-box">
               <div class="chart-title">
                 <span>3. ACE Wound Damage vs Thresholds (0.35 / KO / Fatal)</span>
-                <span id="chtSubDmg" style="color:#ef4444;font-family:var(--font-mono);"></span>
+                <span id="chtSubDmg" style="color:var(--ace-red);font-family:var(--font-mono);"></span>
               </div>
               <canvas id="chartAceDamage" class="chart-canvas"></canvas>
             </div>
             <div class="chart-box">
               <div class="chart-title">
                 <span>4. Expected Bleed Rate vs Range (% Cardiac Output)</span>
-                <span id="chtSubBleed" style="color:#f43f5e;font-family:var(--font-mono);"></span>
+                <span id="chtSubBleed" style="color:var(--ace-red);font-family:var(--font-mono);"></span>
               </div>
               <canvas id="chartBleed" class="chart-canvas"></canvas>
             </div>

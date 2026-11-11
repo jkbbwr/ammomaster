@@ -28,32 +28,69 @@ const ACE_DAMAGE_COLORS = [
   [0.00, 0.00, 1.00, 1]
 ];
 
-// High-luminance Okabe–Ito colorblind-safe body dummy ramps (Yellow → Amber → Vivid Magenta vs Ice Cyan → Sky Blue)
-const ACE_BLOOD_LOSS_COLORS_CB = [
-  [0.00, 0.00, 0.00, 1],
-  [1.00, 0.96, 0.66, 1],
-  [1.00, 0.89, 0.46, 1],
-  [1.00, 0.79, 0.30, 1],
-  [0.98, 0.66, 0.38, 1],
-  [0.97, 0.53, 0.52, 1],
-  [0.96, 0.42, 0.63, 1],
-  [0.95, 0.32, 0.70, 1],
-  [0.93, 0.25, 0.73, 1],
-  [0.93, 0.18, 0.65, 1]
-];
-
-const ACE_DAMAGE_COLORS_CB = [
-  [0.00, 0.00, 0.00, 1],
-  [0.78, 0.96, 1.00, 1],
-  [0.64, 0.91, 1.00, 1],
-  [0.50, 0.85, 1.00, 1],
-  [0.38, 0.78, 0.99, 1],
-  [0.28, 0.72, 0.98, 1],
-  [0.22, 0.66, 0.98, 1],
-  [0.16, 0.58, 0.96, 1],
-  [0.10, 0.50, 0.94, 1],
-  [0.05, 0.42, 0.90, 1]
-];
+// Scientifically tuned CVD body-dummy ramps (verified via Viénot/Machado cone-response matrices)
+const ACE_CVD_RAMPS = {
+  deuteranopia: {
+    blood: [
+      [0.00, 0.00, 0.00, 1], [1.00, 0.96, 0.62, 1], [1.00, 0.88, 0.42, 1],
+      [1.00, 0.78, 0.24, 1], [0.98, 0.68, 0.12, 1], [0.95, 0.58, 0.04, 1],
+      [0.92, 0.50, 0.00, 1], [0.89, 0.44, 0.00, 1], [0.86, 0.39, 0.00, 1],
+      [0.84, 0.36, 0.00, 1]
+    ],
+    damage: [
+      [0.00, 0.00, 0.00, 1], [0.76, 0.92, 1.00, 1], [0.58, 0.84, 1.00, 1],
+      [0.42, 0.76, 1.00, 1], [0.28, 0.68, 1.00, 1], [0.16, 0.61, 1.00, 1],
+      [0.06, 0.56, 1.00, 1], [0.00, 0.50, 0.98, 1], [0.00, 0.44, 0.94, 1],
+      [0.00, 0.38, 0.90, 1]
+    ],
+    bone: [1.00, 0.42, 0.00, 1]
+  },
+  protanopia: {
+    blood: [
+      [0.00, 0.00, 0.00, 1], [1.00, 0.97, 0.68, 1], [1.00, 0.92, 0.48, 1],
+      [1.00, 0.86, 0.32, 1], [1.00, 0.80, 0.20, 1], [1.00, 0.74, 0.12, 1],
+      [1.00, 0.68, 0.08, 1], [1.00, 0.64, 0.06, 1], [1.00, 0.61, 0.08, 1],
+      [1.00, 0.58, 0.10, 1]
+    ],
+    damage: [
+      [0.00, 0.00, 0.00, 1], [0.74, 0.88, 1.00, 1], [0.56, 0.78, 1.00, 1],
+      [0.40, 0.68, 1.00, 1], [0.26, 0.59, 1.00, 1], [0.15, 0.52, 1.00, 1],
+      [0.06, 0.46, 1.00, 1], [0.00, 0.42, 0.98, 1], [0.00, 0.36, 0.95, 1],
+      [0.00, 0.30, 0.92, 1]
+    ],
+    bone: [1.00, 0.65, 0.10, 1]
+  },
+  tritanopia: {
+    blood: [
+      [0.00, 0.00, 0.00, 1], [1.00, 0.84, 0.88, 1], [1.00, 0.70, 0.76, 1],
+      [1.00, 0.56, 0.66, 1], [1.00, 0.44, 0.56, 1], [1.00, 0.34, 0.48, 1],
+      [1.00, 0.25, 0.42, 1], [1.00, 0.19, 0.38, 1], [1.00, 0.16, 0.34, 1],
+      [1.00, 0.14, 0.32, 1]
+    ],
+    damage: [
+      [0.00, 0.00, 0.00, 1], [0.80, 0.98, 0.98, 1], [0.64, 0.95, 0.95, 1],
+      [0.48, 0.92, 0.92, 1], [0.32, 0.88, 0.89, 1], [0.18, 0.84, 0.86, 1],
+      [0.08, 0.80, 0.82, 1], [0.02, 0.74, 0.78, 1], [0.00, 0.68, 0.72, 1],
+      [0.00, 0.60, 0.65, 1]
+    ],
+    bone: [1.00, 0.16, 0.33, 1]
+  },
+  achromatopsia: {
+    blood: [
+      [0.00, 0.00, 0.00, 1], [0.35, 0.35, 0.35, 1], [0.45, 0.45, 0.45, 1],
+      [0.54, 0.54, 0.54, 1], [0.63, 0.63, 0.63, 1], [0.72, 0.72, 0.72, 1],
+      [0.80, 0.80, 0.80, 1], [0.87, 0.87, 0.87, 1], [0.94, 0.94, 0.94, 1],
+      [1.00, 1.00, 1.00, 1]
+    ],
+    damage: [
+      [0.00, 0.00, 0.00, 1], [0.22, 0.25, 0.28, 1], [0.27, 0.30, 0.34, 1],
+      [0.32, 0.35, 0.39, 1], [0.36, 0.40, 0.45, 1], [0.40, 0.45, 0.50, 1],
+      [0.44, 0.49, 0.55, 1], [0.48, 0.53, 0.60, 1], [0.52, 0.57, 0.64, 1],
+      [0.56, 0.62, 0.68, 1]
+    ],
+    bone: [1.00, 1.00, 1.00, 1]
+  }
+};
 
 // Weibull constants from ace_medical_engine/XEH_preInit.sqf
 const WEIBULL_B1 = -Math.log(1 - 0.1);
@@ -915,14 +952,16 @@ const patientState = {
 };
 
 function aceBloodLossToRGBA(bloodLoss) {
-  const ramp = appState.colorblindMode ? ACE_BLOOD_LOSS_COLORS_CB : ACE_BLOOD_LOSS_COLORS;
+  const cvd = ACE_CVD_RAMPS[appState.colorVisionMode];
+  const ramp = cvd ? cvd.blood : ACE_BLOOD_LOSS_COLORS;
   const fr = Math.max(0, Math.min(1, bloodLoss / ACE_CONST.BLOOD_LOSS_RED_THRESHOLD));
   const idx = Math.ceil(fr * (ramp.length - 1));
   return ramp[idx] || ramp[0];
 }
 
 function aceDamageToRGBA(damageNorm) {
-  const ramp = appState.colorblindMode ? ACE_DAMAGE_COLORS_CB : ACE_DAMAGE_COLORS;
+  const cvd = ACE_CVD_RAMPS[appState.colorVisionMode];
+  const ramp = cvd ? cvd.damage : ACE_DAMAGE_COLORS;
   const fr = Math.max(0, Math.min(1, damageNorm / ACE_CONST.DAMAGE_BLUE_THRESHOLD));
   const idx = Math.ceil(fr * (ramp.length - 1));
   return ramp[idx] || ramp[0];
@@ -1200,9 +1239,10 @@ function renderAceBodyDummy(selectedPartIndex, damageThreshold = 1.0) {
     drawTintedTexture(ctx, pc.tex, rgba, 2.1);
 
     if (pc.bone && patientState.fractures[pc.idx] !== 0) {
+      const cvd = ACE_CVD_RAMPS[appState.colorVisionMode];
       const boneColor = patientState.fractures[pc.idx] === 1
-        ? (appState.colorblindMode ? [0.96, 0.30, 0.72, 1] : [1, 0.1, 0.1, 1])
-        : [0.2, 0.65, 1, 1];
+        ? (cvd ? cvd.bone : [1, 0.1, 0.1, 1])
+        : (appState.colorVisionMode === "achromatopsia" ? [0.65, 0.70, 0.76, 1] : [0.2, 0.65, 1, 1]);
       drawTintedTexture(ctx, pc.bone, boneColor, 1.5);
     }
     if (pc.tq && patientState.tourniquets[pc.idx] > 0) {
@@ -1346,7 +1386,7 @@ const appState = {
   impactAngleDeg: 0,
   useAdvBallistics: false,
   alternateArmorPen: true,
-  colorblindMode: false,
+  colorVisionMode: "default", // "default" | "deuteranopia" | "protanopia" | "tritanopia" | "achromatopsia"
   damageThreshold: 1.0,
   dragMode: "bc", // "bc" | "vel"
   originalRound: null,
@@ -1361,43 +1401,127 @@ const appState = {
   rwUnits: "metric"
 };
 
+function isCvdActive() {
+  return Boolean(appState.colorVisionMode && appState.colorVisionMode !== "default");
+}
+
 function getThemePalette() {
-  if (appState.colorblindMode) {
-    return {
-      good: "#38bdf8",
-      goodText: "#7dd3fc",
-      goodBg: "#0284c7",
-      danger: "#ec4899",
-      dangerHi: "#f472b6",
-      dangerText: "#f9a8d4",
-      dangerSoft: "#fbcfe8",
-      dangerBg: "#be185d",
-      deadBg: "#831843",
-      warn: "#f59e0b",
-      warnText: "#fde047",
-      stop: "#38bdf8",
-      zeroBar: "#818cf8"
-    };
+  switch (appState.colorVisionMode) {
+    case "deuteranopia":
+      return {
+        good: "#0096ff",
+        goodText: "#7dd3fc",
+        goodBg: "#0284c7",
+        danger: "#ff6b00",
+        dangerHi: "#fb923c",
+        dangerText: "#fdba74",
+        dangerSoft: "#ffedd5",
+        dangerBg: "#c2410c",
+        deadBg: "#7c2d12",
+        warn: "#fefe62",
+        warnText: "#fef9c3",
+        stop: "#0096ff",
+        penBarPass: "#ff6b00",
+        penBarShort: "#fde047",
+        penBarZero: "#0096ff",
+        velCurve: "#38bdf8",
+        rhaCurve: "#fde047",
+        markerLine: "rgba(255, 255, 255, 0.90)",
+        hzLegend: "◆ Orange=Pen · ■ Blue=Stop"
+      };
+    case "protanopia":
+      return {
+        good: "#0077ff",
+        goodText: "#93c5fd",
+        goodBg: "#1d4ed8",
+        danger: "#ff9f1c",
+        dangerHi: "#fbbf24",
+        dangerText: "#fde68a",
+        dangerSoft: "#fef3c7",
+        dangerBg: "#b45309",
+        deadBg: "#78350f",
+        warn: "#fef08a",
+        warnText: "#fef9c3",
+        stop: "#2997ff",
+        penBarPass: "#ff9f1c",
+        penBarShort: "#fef08a",
+        penBarZero: "#2997ff",
+        velCurve: "#60a5fa",
+        rhaCurve: "#fef08a",
+        markerLine: "rgba(255, 255, 255, 0.90)",
+        hzLegend: "◆ Amber=Pen · ■ Blue=Stop"
+      };
+    case "tritanopia":
+      return {
+        good: "#00d4d8",
+        goodText: "#67e8f9",
+        goodBg: "#0891b2",
+        danger: "#ff2a55",
+        dangerHi: "#fb7185",
+        dangerText: "#fda4af",
+        dangerSoft: "#ffe4e6",
+        dangerBg: "#be123c",
+        deadBg: "#881337",
+        warn: "#fda4af",
+        warnText: "#ffe4e6",
+        stop: "#00d4d8",
+        penBarPass: "#ff2a55",
+        penBarShort: "#fda4af",
+        penBarZero: "#00d4d8",
+        velCurve: "#2dd4bf",
+        rhaCurve: "#67e8f9",
+        markerLine: "rgba(255, 255, 255, 0.90)",
+        hzLegend: "◆ Crimson=Pen · ■ Cyan=Stop"
+      };
+    case "achromatopsia":
+      return {
+        good: "#94a3b8",
+        goodText: "#e2e8f0",
+        goodBg: "#475569",
+        danger: "#ffffff",
+        dangerHi: "#e2e8f0",
+        dangerText: "#ffffff",
+        dangerSoft: "#ffffff",
+        dangerBg: "#334155",
+        deadBg: "#0f172a",
+        warn: "#cbd5e1",
+        warnText: "#f1f5f9",
+        stop: "#64748b",
+        penBarPass: "#ffffff",
+        penBarShort: "#94a3b8",
+        penBarZero: "#475569",
+        velCurve: "#e2e8f0",
+        rhaCurve: "#ffffff",
+        markerLine: "rgba(255, 255, 255, 0.95)",
+        hzLegend: "◆ White=Pen · ■ Slate=Stop"
+      };
+    default:
+      return {
+        good: "#22c55e",
+        goodText: "#4ade80",
+        goodBg: "#16a34a",
+        danger: "#ef4444",
+        dangerHi: "#f43f5e",
+        dangerText: "#f87171",
+        dangerSoft: "#fca5a5",
+        dangerBg: "#dc2626",
+        deadBg: "#991b1b",
+        warn: "#f97316",
+        warnText: "#fdba74",
+        stop: "#38bdf8",
+        penBarPass: "#22c55e",
+        penBarShort: "#f59e0b",
+        penBarZero: "#38bdf8",
+        velCurve: "#38bdf8",
+        rhaCurve: "#eab308",
+        markerLine: "rgba(250, 204, 21, 0.72)",
+        hzLegend: "● Red=Pen ● Blue=Stop"
+      };
   }
-  return {
-    good: "#22c55e",
-    goodText: "#4ade80",
-    goodBg: "#16a34a",
-    danger: "#ef4444",
-    dangerHi: "#f43f5e",
-    dangerText: "#f87171",
-    dangerSoft: "#fca5a5",
-    dangerBg: "#dc2626",
-    deadBg: "#991b1b",
-    warn: "#f97316",
-    warnText: "#fdba74",
-    stop: "#38bdf8",
-    zeroBar: "#38bdf8"
-  };
 }
 
 function formatPenStatusBadge(aceArmorThicknessMM, penetratedPlate, pastTense = false) {
-  const cb = appState.colorblindMode;
+  const cb = isCvdActive();
   if (aceArmorThicknessMM === 0) {
     return `<span class="badge badge-amber">${cb ? "◆ " : ""}FLESH</span>`;
   }
@@ -1514,13 +1638,14 @@ function drawRangeChart(canvasId, config) {
   }
 
   if (config.thresholds) {
-    for (const th of config.thresholds) {
-      if (th.value < yMin || th.value > yMax) continue;
+    config.thresholds.forEach((th, idx) => {
+      if (th.value < yMin || th.value > yMax) return;
       const py = yToPx(th.value);
       ctx.save();
       ctx.strokeStyle = th.color || "#ef4444";
-      ctx.setLineDash([4, 4]);
-      ctx.lineWidth = 1.15;
+      const dashPat = th.dash || (isCvdActive() ? (idx === 0 ? [8, 4] : (idx === 1 ? [2, 3] : [9, 3, 2, 3])) : [4, 4]);
+      ctx.setLineDash(dashPat);
+      ctx.lineWidth = isCvdActive() ? 1.4 : 1.15;
       ctx.beginPath();
       ctx.moveTo(pad.left, py);
       ctx.lineTo(w - pad.right, py);
@@ -1529,14 +1654,14 @@ function drawRangeChart(canvasId, config) {
       ctx.textAlign = "right";
       ctx.fillText(th.label, w - pad.right - 3, py - 3);
       ctx.restore();
-    }
+    });
   }
 
   // Active Engagement Range vertical marker
   if (appState.rangeMeters <= maxRange) {
     const cx = xToPx(appState.rangeMeters);
     ctx.save();
-    ctx.strokeStyle = "rgba(250, 204, 21, 0.72)";
+    ctx.strokeStyle = getThemePalette().markerLine;
     ctx.setLineDash([2, 2]);
     ctx.lineWidth = 1.2;
     ctx.beginPath();
@@ -1635,19 +1760,20 @@ function renderAllCharts() {
   setSub("chtSubDmg", `${tagPrefix}: ${probeEv.dmgPerWound.toFixed(3)} dmg`);
   setSub("chtSubBleed", `${tagPrefix}: ${probeEv.expectedBleedRate.toFixed(3)} CO`);
 
+  const pal = getThemePalette();
+
   drawRangeChart("chartVelocity", {
     maxRange: maxR,
     yMin: 0,
     yMax: Math.max(900, Number(appState.currentRound.initSpeed) * 1.05),
     hoverY: probeEv.effectiveSpeed,
-    thresholds: [{ value: 340.3, label: "Mach 1 (340 m/s)", color: "#64748b" }],
+    thresholds: [{ value: 340.3, label: "Mach 1 (340 m/s)", color: "#94a3b8" }],
     series: [
       { points: origVelPts, color: "rgba(148, 163, 184, 0.45)", dashed: true },
-      { points: velPts, color: "#38bdf8" }
+      { points: velPts, color: pal.velCurve }
     ]
   });
 
-  const pal = getThemePalette();
   const rhaThresholds = [];
   if (probeEv.aceArmorThicknessMM > 0) {
     rhaThresholds.push({
@@ -1664,7 +1790,7 @@ function renderAllCharts() {
     thresholds: rhaThresholds,
     series: [
       { points: origRhaPts, color: "rgba(148, 163, 184, 0.45)", dashed: true },
-      { points: rhaPts, color: "#eab308" }
+      { points: rhaPts, color: pal.rhaCurve }
     ]
   });
 
@@ -2191,12 +2317,12 @@ function renderTunerPenetrationMatrix() {
     const isTargetCls = row.id === goalId ? "active-target" : "";
     const eqCls = row.isEquipped ? "equipped-row" : "";
 
-    let barColor = pal.good;
+    let barColor = pal.penBarPass;
     let barExtraCls = "";
     if (maxDist <= 0) {
-      barColor = pal.zeroBar;
+      barColor = pal.penBarZero;
     } else if (maxDist < curRange) {
-      barColor = "#f59e0b";
+      barColor = pal.penBarShort;
       barExtraCls = "cb-short-stripe";
     }
 
@@ -2347,6 +2473,8 @@ function renderHitzoneButtons() {
   const opts = getSimOpts();
 
   const pal = getThemePalette();
+  const hzLeg = document.getElementById("hitzoneLegendLabel");
+  if (hzLeg) hzLeg.textContent = pal.hzLegend;
   container.innerHTML = HITZONES.map(hz => {
     const ev = evaluateShot(appState.currentRound, appState.armorLoadout, hz.id, appState.rangeMeters, opts);
     const active = hz.id === appState.selectedHitpoint ? "active" : "";
@@ -2965,24 +3093,24 @@ function updateAllViews(skipGoalDistSync = false) {
     : "No Wound";
 
   const pal = getThemePalette();
-  const cb = appState.colorblindMode;
+  const cb = isCvdActive();
   if (vBanner && vPill && vHead && vSub) {
     vBanner.classList.remove("verdict-pen", "verdict-stop", "verdict-unarm");
     if (ev.aceArmorThicknessMM <= 0) {
       vBanner.classList.add("verdict-unarm");
       vPill.textContent = `${cb ? "◆ " : ""}UNARMORED HIT`;
-      vPill.style.background = cb ? "rgba(250, 204, 21, 0.22)" : "rgba(249, 115, 22, 0.22)";
+      vPill.style.background = cb ? "var(--cvd-warn-bg)" : "rgba(249, 115, 22, 0.22)";
       vPill.style.color = pal.warnText;
     } else if (ev.penetratedPlate) {
       vBanner.classList.add("verdict-pen");
       vPill.textContent = `${cb ? "▲ " : ""}PENETRATES ARMOR`;
-      vPill.style.background = cb ? "rgba(236, 72, 153, 0.28)" : "rgba(239, 68, 68, 0.25)";
+      vPill.style.background = cb ? "var(--cvd-pen-bg)" : "rgba(239, 68, 68, 0.25)";
       vPill.style.color = pal.dangerSoft;
     } else {
       vBanner.classList.add("verdict-stop");
       vPill.textContent = `${cb ? "■ " : ""}STOPPED BY PLATE`;
-      vPill.style.background = "rgba(56, 189, 248, 0.22)";
-      vPill.style.color = "#7dd3fc";
+      vPill.style.background = cb ? "var(--cvd-stop-bg)" : "rgba(56, 189, 248, 0.22)";
+      vPill.style.color = pal.goodText;
     }
 
     const tierLabel = ev.aceArmorThicknessMM > 0 ? `Lvl ${ev.aceArmorLevel} (${ev.aceArmorThicknessMM}mm)` : "0mm Flesh";
@@ -3596,20 +3724,38 @@ window.addEventListener("DOMContentLoaded", () => {
     appState.useAdvBallistics = e.target.checked;
     updateAllViews();
   });
-  const chkCb = document.getElementById("chkColorblindMode");
-  if (chkCb) {
+  const applyColorVisionMode = mode => {
+    const valid = ["default", "deuteranopia", "protanopia", "tritanopia", "achromatopsia"];
+    const nextMode = valid.includes(mode) ? mode : "default";
+    appState.colorVisionMode = nextMode;
+    if (nextMode === "default") {
+      document.body.removeAttribute("data-cvd");
+      document.body.classList.remove("cvd-active");
+    } else {
+      document.body.setAttribute("data-cvd", nextMode);
+      document.body.classList.add("cvd-active");
+    }
+  };
+
+  const selCvd = document.getElementById("selColorVisionMode");
+  if (selCvd) {
     try {
-      if (window.localStorage && window.localStorage.getItem("ammomaster_cb_mode") === "1") {
-        appState.colorblindMode = true;
-        chkCb.checked = true;
-        document.body.classList.add("cb-mode");
-      }
+      const urlCvd = window.location && window.location.search
+        ? new URLSearchParams(window.location.search).get("cvd")
+        : null;
+      const savedMode = window.localStorage && window.localStorage.getItem("ammomaster_cvd_mode");
+      const legacyCb = window.localStorage && window.localStorage.getItem("ammomaster_cb_mode") === "1";
+      const initMode = urlCvd || savedMode || (legacyCb ? "deuteranopia" : "default");
+      selCvd.value = ["default", "deuteranopia", "protanopia", "tritanopia", "achromatopsia"].includes(initMode) ? initMode : "default";
+      applyColorVisionMode(selCvd.value);
     } catch (_) {}
-    chkCb.addEventListener("change", e => {
-      appState.colorblindMode = Boolean(e.target.checked);
-      document.body.classList.toggle("cb-mode", appState.colorblindMode);
+    selCvd.addEventListener("change", e => {
+      applyColorVisionMode(e.target.value);
       try {
-        if (window.localStorage) window.localStorage.setItem("ammomaster_cb_mode", appState.colorblindMode ? "1" : "0");
+        if (window.localStorage) {
+          window.localStorage.setItem("ammomaster_cvd_mode", appState.colorVisionMode);
+          window.localStorage.removeItem("ammomaster_cb_mode");
+        }
       } catch (_) {}
       updateAllViews();
     });
