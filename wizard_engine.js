@@ -2984,6 +2984,7 @@ function updateAllViews(skipGoalDistSync = false) {
   }
   renderAceBodyDummy(ev.bodyPartIndex, appState.damageThreshold);
   updateAceInjuryListDOM(ev.bodyPartIndex, ev, appState.damageThreshold);
+  updateMathsModalLiveStrip(ev);
 }
 
 // ============================================================================
@@ -4107,9 +4108,197 @@ window.addEventListener("DOMContentLoaded", () => {
 
   bindDraggablePenMatrix();
   bindInteractiveChartEvents();
+  bindDocModalEvents();
   window.addEventListener("resize", () => renderAllCharts());
 
   initAceTextures(() => {
     selectRoundByClass(defaultRound.className);
   });
 });
+
+// ============================================================================
+// Tutorial & Mathematics Reference Modals Controller
+// ============================================================================
+let activeTutorialStep = 0;
+let activeMathsChapter = 0;
+const TOTAL_TUTORIAL_STEPS = 6;
+const TOTAL_MATHS_CHAPTERS = 6;
+
+function updateMathsModalLiveStrip(evArg) {
+  const titleEl = document.getElementById("mathLiveTitle");
+  if (!titleEl || !appState.currentRound) return;
+
+  const opts = getSimOpts();
+  const ev = evArg || evaluateShot(appState.currentRound, appState.armorLoadout, appState.selectedHitpoint, appState.rangeMeters, opts);
+  const r = appState.currentRound;
+  const hz = HITZONES.find(h => h.id === appState.selectedHitpoint) || HITZONES[3];
+
+  titleEl.textContent = `LIVE ACTIVE SHOT: ${r.className} @ ${appState.rangeMeters}m → ${hz.label}`;
+  const modeTag = document.getElementById("mathLiveModeTag");
+  if (modeTag) {
+    const dragLabel = opts.useAdvBallistics ? `ACE G${r.ACE_dragModel || 1} Drag` : "Vanilla airFriction";
+    const penLabel = opts.alternateArmorPen ? "ACE3 Armor Pen ON" : "ACE3 Armor Pen OFF";
+    modeTag.textContent = `${dragLabel} · ${penLabel} · M_th=${Number(appState.damageThreshold || 1).toFixed(1)}`;
+  }
+
+  const setCell = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  setCell("mlVel", `${ev.impactSpeedRaw.toFixed(1)} m/s (${Math.round(ev.kineticEnergyJ)} J)`);
+  setCell("mlRha", `${ev.rhaPenMM.toFixed(1)} mm`);
+  setCell(
+    "mlPlate",
+    ev.aceArmorThicknessMM > 0
+      ? `Lvl ${ev.aceArmorLevel} (${ev.aceArmorThicknessMM}mm) · ${(ev.penRatio * 100).toFixed(0)}%`
+      : "Unarmored (0mm)"
+  );
+  setCell("mlFinalDmg", `${ev.aceFinalDamage.toFixed(3)} / ${ev.dmgPerWound.toFixed(3)}`);
+  const mlPerSec = ev.expectedBleedRate * ACE_CONST.HEALTHY_CARDIAC_OUTPUT_LPS * 1000;
+  setCell("mlBleed", `${mlPerSec.toFixed(1)} mL/s (${(ev.expectedBleedRate * 100).toFixed(1)}% CO)`);
+  setCell("mlKoFatal", `${(ev.koProb * 100).toFixed(0)}% KO / ${(ev.totalFatalProb * 100).toFixed(0)}% Fatal`);
+}
+
+function openAppModal(modalId) {
+  document.querySelectorAll(".modal-backdrop").forEach(m => m.classList.remove("open"));
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  if (modalId === "mathsModal") updateMathsModalLiveStrip();
+  modal.classList.add("open");
+}
+
+function closeAppModals() {
+  document.querySelectorAll(".modal-backdrop").forEach(m => m.classList.remove("open"));
+}
+
+function setTutorialStep(stepIdx) {
+  activeTutorialStep = Math.max(0, Math.min(TOTAL_TUTORIAL_STEPS - 1, Number(stepIdx) || 0));
+  document.querySelectorAll("#tutorialStepsNav [data-tut-step]").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.getAttribute("data-tut-step")) === activeTutorialStep);
+  });
+  document.querySelectorAll("#tutorialModal [data-tut-pane]").forEach(pane => {
+    pane.classList.toggle("active", Number(pane.getAttribute("data-tut-pane")) === activeTutorialStep);
+  });
+  const counter = document.getElementById("tutorialStepCounter");
+  if (counter) counter.textContent = `Step ${activeTutorialStep + 1} of ${TOTAL_TUTORIAL_STEPS} · Use ← / → keys`;
+
+  const prevBtn = document.getElementById("btnTutPrev");
+  const nextBtn = document.getElementById("btnTutNext");
+  if (prevBtn) prevBtn.disabled = activeTutorialStep === 0;
+  if (nextBtn) {
+    nextBtn.textContent = activeTutorialStep === TOTAL_TUTORIAL_STEPS - 1 ? "Finish Tutorial ✓" : "Next Step →";
+  }
+}
+
+function setMathsChapter(chapIdx) {
+  activeMathsChapter = Math.max(0, Math.min(TOTAL_MATHS_CHAPTERS - 1, Number(chapIdx) || 0));
+  document.querySelectorAll("#mathsChaptersNav [data-math-chap]").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.getAttribute("data-math-chap")) === activeMathsChapter);
+  });
+  document.querySelectorAll("#mathsModal [data-math-pane]").forEach(pane => {
+    pane.classList.toggle("active", Number(pane.getAttribute("data-math-pane")) === activeMathsChapter);
+  });
+  const counter = document.getElementById("mathsChapterCounter");
+  if (counter) counter.textContent = `Chapter ${activeMathsChapter + 1} of ${TOTAL_MATHS_CHAPTERS} · Validated against Arma 3 2.18 & ACE 3.21.2`;
+
+  const prevBtn = document.getElementById("btnMathPrev");
+  const nextBtn = document.getElementById("btnMathNext");
+  if (prevBtn) prevBtn.disabled = activeMathsChapter === 0;
+  if (nextBtn) {
+    nextBtn.textContent = activeMathsChapter === TOTAL_MATHS_CHAPTERS - 1 ? "Done ✓" : "Next Chapter →";
+  }
+}
+
+function highlightWorkbenchTarget(selector) {
+  closeAppModals();
+  const target = document.querySelector(selector);
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  target.classList.remove("spotlight-pulse");
+  void target.offsetWidth;
+  target.classList.add("spotlight-pulse");
+  setTimeout(() => target.classList.remove("spotlight-pulse"), 3700);
+}
+
+function bindDocModalEvents() {
+  const btnTut = document.getElementById("btnOpenTutorialModal");
+  const btnMath = document.getElementById("btnOpenMathsModal");
+  if (btnTut) btnTut.addEventListener("click", () => { setTutorialStep(activeTutorialStep); openAppModal("tutorialModal"); });
+  if (btnMath) btnMath.addEventListener("click", () => { setMathsChapter(activeMathsChapter); openAppModal("mathsModal"); });
+
+  document.querySelectorAll("[data-close-modal]").forEach(btn => {
+    btn.addEventListener("click", closeAppModals);
+  });
+
+  document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
+    backdrop.addEventListener("click", e => {
+      if (e.target === backdrop) closeAppModals();
+    });
+  });
+
+  document.querySelectorAll("#tutorialStepsNav [data-tut-step]").forEach(btn => {
+    btn.addEventListener("click", () => setTutorialStep(Number(btn.getAttribute("data-tut-step"))));
+  });
+  document.querySelectorAll("#mathsChaptersNav [data-math-chap]").forEach(btn => {
+    btn.addEventListener("click", () => setMathsChapter(Number(btn.getAttribute("data-math-chap"))));
+  });
+
+  const tutPrev = document.getElementById("btnTutPrev");
+  const tutNext = document.getElementById("btnTutNext");
+  if (tutPrev) tutPrev.addEventListener("click", () => setTutorialStep(activeTutorialStep - 1));
+  if (tutNext) {
+    tutNext.addEventListener("click", () => {
+      if (activeTutorialStep >= TOTAL_TUTORIAL_STEPS - 1) closeAppModals();
+      else setTutorialStep(activeTutorialStep + 1);
+    });
+  }
+
+  const mathPrev = document.getElementById("btnMathPrev");
+  const mathNext = document.getElementById("btnMathNext");
+  if (mathPrev) mathPrev.addEventListener("click", () => setMathsChapter(activeMathsChapter - 1));
+  if (mathNext) {
+    mathNext.addEventListener("click", () => {
+      if (activeMathsChapter >= TOTAL_MATHS_CHAPTERS - 1) closeAppModals();
+      else setMathsChapter(activeMathsChapter + 1);
+    });
+  }
+
+  const swTutToMath = document.getElementById("btnSwitchTutToMaths");
+  if (swTutToMath) swTutToMath.addEventListener("click", () => { setMathsChapter(activeMathsChapter); openAppModal("mathsModal"); });
+  const swMathToTut = document.getElementById("btnSwitchMathsToTut");
+  if (swMathToTut) swMathToTut.addEventListener("click", () => { setTutorialStep(activeTutorialStep); openAppModal("tutorialModal"); });
+
+  document.querySelectorAll("[data-spotlight]").forEach(btn => {
+    btn.addEventListener("click", () => highlightWorkbenchTarget(btn.getAttribute("data-spotlight")));
+  });
+
+  document.querySelectorAll("[data-open-export-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      closeAppModals();
+      const expBtn = document.querySelector('.tab-btn[data-tab="tabExport"]');
+      if (expBtn) expBtn.click();
+      highlightWorkbenchTarget("#tabExport");
+    });
+  });
+
+  document.addEventListener("keydown", e => {
+    const tutOpen = document.getElementById("tutorialModal") && document.getElementById("tutorialModal").classList.contains("open");
+    const mathOpen = document.getElementById("mathsModal") && document.getElementById("mathsModal").classList.contains("open");
+    if (!tutOpen && !mathOpen) return;
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeAppModals();
+    } else if (e.key === "ArrowRight") {
+      if (tutOpen && activeTutorialStep < TOTAL_TUTORIAL_STEPS - 1) setTutorialStep(activeTutorialStep + 1);
+      else if (mathOpen && activeMathsChapter < TOTAL_MATHS_CHAPTERS - 1) setMathsChapter(activeMathsChapter + 1);
+    } else if (e.key === "ArrowLeft") {
+      if (tutOpen && activeTutorialStep > 0) setTutorialStep(activeTutorialStep - 1);
+      else if (mathOpen && activeMathsChapter > 0) setMathsChapter(activeMathsChapter - 1);
+    }
+  });
+
+  setTutorialStep(0);
+  setMathsChapter(0);
+}

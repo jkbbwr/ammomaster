@@ -51,6 +51,14 @@ __STYLES__
         <span class="stat-pill"><strong id="hdrVestsCount">0</strong> Vests</span>
         <span style="display:none;"><strong id="hdrHelmetsCount">0</strong><strong id="hdrUniformsCount">0</strong></span>
       </div>
+      <div class="hdr-doc-btns">
+        <button type="button" class="subtle-blue" id="btnOpenTutorialModal" title="Interactive step-by-step walkthrough of the AmmoMaster balancing workflow">
+          ? Tutorial
+        </button>
+        <button type="button" class="subtle-blue" id="btnOpenMathsModal" title="Complete Arma 3 &amp; ACE 3.21.2 ballistics, armor &amp; medical equations reference">
+          &Sigma; Maths &amp; Physics
+        </button>
+      </div>
       <button type="button" class="danger" id="btnGlobalReset" title="Revert both round and gear to their scraped presets">
         Reset All
       </button>
@@ -898,6 +906,463 @@ __STYLES__
     </section>
 
   </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: INTERACTIVE WORKBENCH TUTORIAL                               -->
+  <!-- ===================================================================== -->
+  <div class="modal-backdrop" id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialModalTitle">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon-badge">GUIDE</span>
+          <div>
+            <h2 id="tutorialModalTitle">How to Use AmmoMaster — 6-Step Balancing Walkthrough</h2>
+            <p>Ground rounds in real-world ballistics, tune armor cutoffs &amp; flesh lethality independently, and export HEMTT-ready <code>.hpp</code> patches.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-close-modal="tutorialModal" title="Close (Esc)">&times; Esc</button>
+      </div>
+
+      <div class="modal-subnav" id="tutorialStepsNav">
+        <button type="button" class="modal-pill-btn active" data-tut-step="0"><span class="modal-pill-num">1</span> Pick &amp; Ground Round</button>
+        <button type="button" class="modal-pill-btn" data-tut-step="1"><span class="modal-pill-num">2</span> Equip Target Armor</button>
+        <button type="button" class="modal-pill-btn" data-tut-step="2"><span class="modal-pill-num">3</span> Drag Armor Cutoffs</button>
+        <button type="button" class="modal-pill-btn" data-tut-step="3"><span class="modal-pill-num">4</span> Flesh Lethality (<code>hit</code>)</button>
+        <button type="button" class="modal-pill-btn" data-tut-step="4"><span class="modal-pill-num">5</span> ACE3 Dummy &amp; Charts</button>
+        <button type="button" class="modal-pill-btn" data-tut-step="5"><span class="modal-pill-num">6</span> Session &amp; <code>.hpp</code> Export</button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- STEP 1 -->
+        <div class="modal-pane active" data-tut-pane="0">
+          <div class="tut-hero">
+            <div>
+              <h3>Step 1: Select Ammunition &amp; Align Real-World Ballistics (Card 1)</h3>
+              <p>Start in the left-hand <strong>Ammunition</strong> card. Filter by modpack or search across 832 scraped rounds, then inspect how the mod's config compares against real SAAMI / CIP / MIL-DTL / GRAU cartridge specifications.</p>
+            </div>
+            <button type="button" class="xs primary" data-spotlight=".card-round">Highlight Card 1 &rarr;</button>
+          </div>
+          <div class="tut-grid">
+            <div class="tut-card">
+              <h4><span>Search, Mod Filter &amp; Barrel Length</span> <span class="badge badge-blue">Card 1 Top</span></h4>
+              <ul>
+                <li>Use the mod dropdown (<code>Vanilla</code>, <code>ACE3</code>, <code>Project M</code>, <code>Aegis</code>, or <code>&#9733; Session Tuned</code>) and search box to pick any round.</li>
+                <li>If the round defines <code>ACE_barrelLengths[]</code>, a barrel selector appears automatically so you can test carbine vs. SBR vs. DMR velocities.</li>
+                <li>Toggle <strong>ACE3 G1–G8 Drag</strong> in the top header to switch between vanilla <code>airFriction</code> and GNU Exterior Ballistics drag curves.</li>
+              </ul>
+            </div>
+            <div class="tut-card">
+              <h4><span>1-Click Real-World Spec Alignment (181 Loads)</span> <span class="badge badge-amber">Physics Diff</span></h4>
+              <ul>
+                <li>The <strong>Real-World Match</strong> box automatically pairs your round with its closest real-world load and flags discrepancies in <code>initSpeed</code>, <code>typicalSpeed</code>, <code>ACE_muzzleVelocities[]</code>, bullet mass, or <code>G1</code>/<code>G7</code> BC.</li>
+                <li>Click <strong>Apply RW Spec</strong> to synchronize velocity, barrel tables, bullet mass, drag model, and <code>airFriction</code> in one click—or browse all 181 presets under the <strong>Real-World Spec</strong> sub-tab.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="tut-tip">
+            <strong>Pro Tip:</strong> Grounding flight ballistics first (velocity, mass, BC, <code>typicalSpeed</code>) means downrange energy decay is physically realistic before you touch armor penetration or damage.
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="modal-pane" data-tut-pane="1">
+          <div class="tut-hero">
+            <div>
+              <h3>Step 2: Pick Target Armor, Hitzone &amp; Custom Plate Tiers (Card 3)</h3>
+              <p>Use the right-hand <strong>Target Armor</strong> card to choose what your round is shooting at—any of 287 vests, 262 helmets, and 168 base uniforms across 11 anatomical hitpoints.</p>
+            </div>
+            <button type="button" class="xs primary" data-spotlight=".card-armor">Highlight Card 3 &rarr;</button>
+          </div>
+          <div class="tut-grid">
+            <div class="tut-card">
+              <h4><span>Body Zone &amp; Gear Presets</span> <span class="badge badge-blue">Card 3 Top</span></h4>
+              <ul>
+                <li>Click <strong>Torso (Vest)</strong> or <strong>Head (Helm)</strong>, or pick a specific hitzone (<code>Chest</code>, <code>Diaphragm</code>, <code>Abdomen</code>, <code>Pelvis</code>, <code>Arms</code>, <code>Legs</code>).</li>
+                <li>Coverage pills under the vest selector show which torso sub-zones are armored vs. exposed soft tissue.</li>
+                <li>Warning banners automatically alert you when a vest triggers ACE3's <code>#9063</code> logarithmic over-cap (<code>armor &gt; 24</code> on vests or <code>&gt; 12</code> on helmets).</li>
+              </ul>
+            </div>
+            <div class="tut-card">
+              <h4><span>Custom Vest / Helmet Tuning</span> <span class="badge badge-green">Lvl I–V</span></h4>
+              <ul>
+                <li>Click <strong>Lvl I</strong> through <strong>Lvl V</strong> (<code>6, 15, 21, 40, 55 mm RHAe</code>) or edit <code>armor</code> &amp; <code>passThrough</code> directly to rebalance a vest or helmet.</li>
+                <li>Click <strong>Stop Round @ Dist</strong> to immediately set the vest/helmet to the minimum ACE tier needed to stop the active round at your current Test Engagement Distance.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="tut-tip">
+            <strong>Pro Tip:</strong> Keep <em>Apply edits across all Torso hitpoints</em> checked when tuning a plate carrier so <code>HitChest</code>, <code>HitDiaphragm</code>, and <code>HitAbdomen</code> stay consistent.
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="modal-pane" data-tut-pane="2">
+          <div class="tut-hero">
+            <div>
+              <h3>Step 3: Set Armor Penetration Cutoffs Visually (Card 2 &middot; Control A)</h3>
+              <p>Instead of guessing abstract <code>CfgAmmo &gt;&gt; caliber</code> numbers, drag the horizontal range bars directly in meters and let AmmoMaster inverse-solve <code>caliber</code> for you.</p>
+            </div>
+            <button type="button" class="xs primary" data-spotlight="#rwMaxPenDistField">Highlight Penetration Matrix &rarr;</button>
+          </div>
+          <div class="tut-grid">
+            <div class="tut-card">
+              <h4><span>Draggable Penetration Matrix (0–1000m)</span> <span class="badge badge-blue">Control A</span></h4>
+              <ul>
+                <li>Grab any bar—<strong>Equipped Gear</strong>, <strong>ACE Levels I–V</strong>, or <strong>+ Custom mm</strong>—and drag left/right (or type an exact meter cutoff in the right-hand input box).</li>
+                <li>The gray tick mark (<code>&#9474;</code>) shows the round's original scraped cutoff; the glowing yellow line shows your current <strong>Test Engagement Distance</strong>.</li>
+                <li>Use quick buttons <strong>Stop @ 0m</strong> (defeated point-blank) or <strong>Match Test Dist</strong> for instant alignment.</li>
+              </ul>
+            </div>
+            <div class="tut-card">
+              <h4><span>4 Tactical Cutoff Criteria</span> <span class="badge badge-amber">Goal Selector</span></h4>
+              <ul>
+                <li><strong>Penetrate &amp; Bleed (&gt; 0.35):</strong> Exact ACE3 boundary where blunt <code>Contusion</code> turns into bleeding <code>VelocityWound</code> / <code>Avulsion</code>.</li>
+                <li><strong>1-Shot Knockdown:</strong> Distance out to which 1 torso/head hit exceeds ACE3's trauma unconsciousness threshold.</li>
+                <li><strong>Heart-Shot (&ge; 0.60):</strong> Distance where torso wounds can trigger ACE3's 5% instant fatal heart-hit check.</li>
+                <li><strong>100% Raw RHAe:</strong> Pure kinetic steel perforation (<code>v &times; cal &times; 0.015 &ge; plate mm</code>).</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="modal-pane" data-tut-pane="3">
+          <div class="tut-hero">
+            <div>
+              <h3>Step 4: Tune Unarmored Flesh Lethality Independently (Card 2 &middot; Control B)</h3>
+              <p>In ACE3, changing <code>hit</code> normally shifts armor penetration ranges too—making balancing frustrating. AmmoMaster solves this with automatic decoupled locking.</p>
+            </div>
+            <button type="button" class="xs primary" data-spotlight=".card-center">Highlight Card 2 &rarr;</button>
+          </div>
+          <div class="tut-grid">
+            <div class="tut-card">
+              <h4><span><code>Lock Armor Pen Range</code> (Decoupled Solver)</span> <span class="badge badge-green">Key Feature</span></h4>
+              <ul>
+                <li>When <strong>Lock Armor Pen Range</strong> is checked (default), dragging the <strong>Flesh Lethality (<code>hit</code>)</strong> slider automatically compensates <code>caliber</code> in real time so your armor penetration cutoff meter mark stays pinned!</li>
+                <li>Uncheck it anytime if you want raw <code>hit</code> edits to leave <code>caliber</code> untouched and shift both flesh and plate performance together.</li>
+              </ul>
+            </div>
+            <div class="tut-card">
+              <h4><span>BI Kinetic Energy Profiles (<code>&radic;KE / 5</code>)</span> <span class="badge badge-blue">Control B</span></h4>
+              <ul>
+                <li>Click <strong>AP 0.88&times;</strong>, <strong>FMJ 1.0&times;</strong>, <strong>EPR 1.12&times;</strong>, or <strong>JHP 1.25&times;</strong> to derive <code>hit</code> from muzzle kinetic energy using Bohemia Interactive's empirical formula, scaled by projectile terminal behavior.</li>
+                <li>Watch the <strong>Unarmored KO / Kill</strong> badge and top <strong>Verdict Banner</strong> update live as you tune.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="modal-pane" data-tut-pane="4">
+          <div class="tut-hero">
+            <div>
+              <h3>Step 5: Verify on the ACE3 Medical Dummy, Firing Range &amp; Charts</h3>
+              <p>Scroll to the bottom workspace to test real ACE3 wound trauma, stochastic multi-shot bursts, side-by-side caliber/vest lineups, and 0–1500m ballistics curves.</p>
+            </div>
+            <button type="button" class="xs primary" data-spotlight=".ace-medical-container">Highlight ACE3 Dummy &rarr;</button>
+          </div>
+          <div class="tut-grid">
+            <div class="tut-card">
+              <h4><span>1-Shot Preview vs. Live Firing Range</span> <span class="badge badge-red">ACE3 GUI</span></h4>
+              <ul>
+                <li><strong>1-Shot Preview:</strong> Shows exact analytical expectation (fractional wound counts, mL/s cardiac-output bleeding, pain, KO %, and Weibull fatality %).</li>
+                <li><strong>Fire 1 Shot / 3-Rnd Burst:</strong> Switches to stochastic simulation using ACE3's exact <code>random [0.9, 1.0, 1.1]</code> triangular roll, fractures, limping, <strong>Tourniquet</strong>, and <strong>Bandage</strong> actions.</li>
+              </ul>
+            </div>
+            <div class="tut-card">
+              <h4><span>Lineups, 4 Interactive Charts &amp; 11 Hitzones</span> <span class="badge badge-blue">Bottom Tabs</span></h4>
+              <ul>
+                <li>Click <strong>+ Pin Round</strong> (Card 2) or <strong>+ Pin Vest</strong> (Card 3) to benchmark multiple calibers and carriers side-by-side.</li>
+                <li>Hover any of the 4 downrange charts to compare <strong>Dashed (Original Preset)</strong> vs. <strong>Solid (Tuned)</strong> curves across 0–1500m, or inspect <strong>Step-by-Step Math</strong> and <strong>All 11 Hitzones</strong>.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="modal-pane" data-tut-pane="5">
+          <div class="tut-hero">
+            <div>
+              <h3>Step 6: Multi-Item Session Persistence &amp; Batch <code>.hpp</code> Export</h3>
+              <p>Tune an entire caliber family and vest lineup in one sitting, then export a single clean, topologically sorted Arma 3 config patch.</p>
+            </div>
+            <button type="button" class="xs primary" data-open-export-tab="1">Open Export .hpp Tab &rarr;</button>
+          </div>
+          <div class="tut-grid">
+            <div class="tut-card">
+              <h4><span>Automatic Session Memory (<code>&#9998;</code>)</span> <span class="badge badge-amber">Multi-Item</span></h4>
+              <ul>
+                <li>Every round, vest, or helmet you modify is automatically saved in session memory when you switch items—nothing is lost.</li>
+                <li>Modified items display a <code>&#9998;</code> prefix in dropdowns, appear in the <code>&#9733; Session Tuned</code> mod filter, and are pinned at the top of the Caliber Lineup table.</li>
+              </ul>
+            </div>
+            <div class="tut-card">
+              <h4><span>HEMTT-Ready Config Generation</span> <span class="badge badge-green">CfgAmmo / Mags / Weapons</span></h4>
+              <ul>
+                <li>Exports <code>CfgAmmo</code> with proportionally scaled <code>ACE_muzzleVelocities[]</code> so ACE3 Advanced Ballistics respects your velocity changes in-game.</li>
+                <li>Emits real scraped <code>CfgMagazines</code> classes and properly nested <code>CfgWeapons &gt;&gt; ItemInfo &gt;&gt; HitpointsProtectionInfo</code> blocks, topologically ordered so parent classes always precede derived camo variants.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="tut-tip">
+            <strong>Want to see every equation under the hood?</strong> Click <strong>Open &Sigma; Maths &amp; Physics Reference</strong> in the footer below!
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);" id="tutorialStepCounter">Step 1 of 6 &middot; Use &larr; / &rarr; keys</span>
+          <button type="button" class="xs subtle-blue" id="btnSwitchTutToMaths">Open &Sigma; Maths &amp; Physics Reference</button>
+        </div>
+        <div class="btn-row">
+          <button type="button" id="btnTutPrev">&larr; Previous</button>
+          <button type="button" class="primary" id="btnTutNext">Next Step &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: COMPLETE ARMA 3 & ACE 3.21.2 MATHEMATICS REFERENCE           -->
+  <!-- ===================================================================== -->
+  <div class="modal-backdrop" id="mathsModal" role="dialog" aria-modal="true" aria-labelledby="mathsModalTitle">
+    <div class="modal-dialog modal-wide">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon-badge">&Sigma; MATHS</span>
+          <div>
+            <h2 id="mathsModalTitle">Validated Arma 3 &amp; ACE 3.21.2 Ballistics, Armor &amp; Medical Mathematics</h2>
+            <p>Exact closed-form &amp; numerical equations implemented in <code>wizard_engine.js</code>, verified against RV4 Engine formulas and ACE 3.21.2 source SQF.</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-close-modal="mathsModal" title="Close (Esc)">&times; Esc</button>
+      </div>
+
+      <div class="modal-subnav" id="mathsChaptersNav">
+        <button type="button" class="modal-pill-btn active" data-math-chap="0"><span class="modal-pill-num">1</span> Exterior Ballistics &amp; Drag</button>
+        <button type="button" class="modal-pill-btn" data-math-chap="1"><span class="modal-pill-num">2</span> RHAe Pen &amp; Vanilla RV4</button>
+        <button type="button" class="modal-pill-btn" data-math-chap="2"><span class="modal-pill-num">3</span> ACE3 Armor Quantization</button>
+        <button type="button" class="modal-pill-btn" data-math-chap="3"><span class="modal-pill-num">4</span> Wounds &amp; Triangular Roll</button>
+        <button type="button" class="modal-pill-btn" data-math-chap="4"><span class="modal-pill-num">5</span> KO, Weibull &amp; Bleedout</button>
+        <button type="button" class="modal-pill-btn" data-math-chap="5"><span class="modal-pill-num">6</span> Inverse Balancing Solvers</button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Live Active-Shot Telemetry Strip -->
+        <div class="math-live-ribbon">
+          <div class="math-live-hdr">
+            <span id="mathLiveTitle">LIVE ACTIVE SHOT TELEMETRY: —</span>
+            <span style="font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);" id="mathLiveModeTag">Mode: ACE3 Armor Pen</span>
+          </div>
+          <div class="math-live-cells">
+            <div class="math-live-cell"><span>Impact v(x)</span><strong id="mlVel">-</strong></div>
+            <div class="math-live-cell"><span>Bullet RHAe</span><strong id="mlRha">-</strong></div>
+            <div class="math-live-cell"><span>ACE Plate / r_pen</span><strong id="mlPlate">-</strong></div>
+            <div class="math-live-cell"><span>ACE D_final / d_w</span><strong id="mlFinalDmg">-</strong></div>
+            <div class="math-live-cell"><span>Bleed Rate</span><strong id="mlBleed">-</strong></div>
+            <div class="math-live-cell"><span>P(KO) / P(Fatal)</span><strong id="mlKoFatal">-</strong></div>
+          </div>
+        </div>
+
+        <!-- CHAPTER 1: EXTERIOR BALLISTICS -->
+        <div class="modal-pane active" data-math-pane="0">
+          <div class="math-section">
+            <h3><span>1A. Vanilla Arma 3 Exponential Drag ODE</span> <span class="math-src-tag">RV4 ShotBullet &middot; airFriction</span></h3>
+            <p>In base Arma 3 (when ACE3 Advanced Ballistics is disabled or a projectile lacks <code>ACE_ballisticCoefficients[]</code>), deceleration is strictly proportional to velocity squared with constant <code>k = airFriction &lt; 0</code> (units of m<sup>&minus;1</sup>):</p>
+            <div class="math-eq">dv/dt = k &middot; v&sup2;   &rArr;   dv/dx = (dv/dt) / v = k &middot; v
+
+v(x)   = v&#8320; &middot; exp(k &middot; x)
+ToF(x) = (exp(&minus;k &middot; x) &minus; 1) / (&minus;k &middot; v&#8320;)
+KE(x)  = &frac12; &middot; (m_grams / 1000) &middot; v(x)&sup2;        <span class="eq-comment">// Joules (J)</span></div>
+          </div>
+
+          <div class="math-section">
+            <h3><span>1B. ACE 3.21.2 GNU Exterior Ballistics G1–G8 Drag</span> <span class="math-src-tag">ace_advanced_ballistics_fnc_calculateRetardation</span></h3>
+            <p>When <strong>ACE3 G1–G8 Drag</strong> is active, AmmoMaster evaluates the exact piecewise Mach/velocity power-law tables <code>(v_min_fps, A_i, M_i)</code> from GNU Exterior Ballistics for models <strong>G1, G2, G5, G6, G7, G8</strong> under ICAO standard sea-level atmosphere (15&deg;C, 1013.25 hPa) and integrates spatially via 2nd-order Runge-Kutta (RK2 midpoint):</p>
+            <div class="math-eq">v_fps = v_mps &times; 3.2808399
+a_drag(v) = [ A_i &middot; (v_fps ^ M_i) / BC ] / 3.2808399    <span class="eq-comment">// Retardation in m/s&sup2; for table bracket v_fps &gt; v_min_i</span>
+
+<span class="eq-comment">// Spatial ODE dv/dx = &minus;a_drag(v) / v integrated over adaptive step &Delta;x &isin; [0.25m, 1.5m]:</span>
+v_mid  = v &minus; 0.5 &middot; &Delta;x &middot; (a_drag(v) / v)
+v_next = v &minus; &Delta;x &middot; (a_drag(v_mid) / v_mid)
+&Delta;t     = &Delta;x / [ 0.5 &middot; (v + v_next) ]</div>
+            <ul>
+              <li><strong>BC &rarr; Vanilla <code>airFriction</code> Fitting:</strong> Whenever you edit BC or apply a Real-World Spec, <code>solveAirFrictionFromBC</code> integrates G1/G7 flight to <code>x = 250 m</code> and sets <code>airFriction = ln(v_250 / v&#8320;) / 250</code> so AI and non-AB sessions match downrange trajectory.</li>
+              <li><strong><code>ACE_muzzleVelocities[]</code> Scaling:</strong> When <code>initSpeed</code> changes, <code>syncAceBarrelMuzzleVelocities</code> scales the barrel velocity array by <code>v&#8320;_new / v_ref_orig</code> (anchoring to the ~16" / 406.4 mm barrel entry if the mod's original <code>initSpeed</code> and barrel array differed by &gt;8%).</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- CHAPTER 2: KINETIC PENETRATION & VANILLA DAMAGE -->
+        <div class="modal-pane" data-math-pane="1">
+          <div class="math-section">
+            <h3><span>2A. Kinetic RHAe Penetration &amp; Ricochet</span> <span class="math-src-tag">RV4 Engine &middot; ARMOR_PENETRABILITY = 0.015</span></h3>
+            <p>Both Real Virtuality 4 fire-geometry penetration and ACE3's armor penetration handler compute rolled homogeneous armor equivalency (mm RHAe) linearly from normal impact speed and dimensionless <code>CfgAmmo &gt;&gt; caliber</code>:</p>
+            <div class="math-eq">v_eff       = v(x) &middot; max(0.05, cos &theta;)                <span class="eq-comment">// &theta; = impact obliquity angle (deg)</span>
+RHAe_mm     = v_eff &times; caliber &times; 0.015                <span class="eq-comment">// 15 mm RHAe per 1000 m/s at caliber = 1.0</span>
+Concrete_mm = RHAe_mm &times; (80 / 15)                    <span class="eq-comment">// 80 mm per 1000 m/s at caliber = 1.0</span>
+Meat_mm     = RHAe_mm &times; (250 / 15)                   <span class="eq-comment">// 250 mm tissue channel reference</span>
+isRicochet  = (&theta; &gt; 90&deg; &minus; deflecting)</div>
+          </div>
+
+          <div class="math-section">
+            <h3><span>2B. Base Arma 3 Hitpoint &amp; Structural Damage</span> <span class="math-src-tag">CAManBase HitPoints</span></h3>
+            <p>Note that Arma 3 scales kinetic bullet damage <strong>linearly</strong> with <code>v_eff / typicalSpeed</code> (kinetic energy scales with <code>v&sup2;</code>, while raw engine hit scales with <code>v</code>):</p>
+            <div class="math-eq">D_raw    = hit &middot; (1 &minus; explosive) &middot; (v_eff / typicalSpeed) + hit &middot; explosive
+A_uni    = unitBaseArmor &times; hitpointArmorMult          <span class="eq-comment">// Typically 2.0 &times; 1.0 = 2.0 on CAManBase</span>
+A_van    = max(1.0, A_uni + A_vest_raw + A_helm_raw)
+PT_eff   = PT_hitpoint &times; PT_vest &times; PT_helm
+
+D_hp     = D_raw / A_van                              <span class="eq-comment">// Passed into HandleDamage event handler!</span>
+D_struct = (D_hp &times; PT_eff) / armorStructural          <span class="eq-comment">// Global total-damage transfer (default structural = 4.0)</span></div>
+            <ul>
+              <li>In vanilla Arma 3 (without ACE Medical), vital hitpoints (Head, Face, Neck, Chest, Diaphragm, Abdomen, Pelvis) kill immediately at <code>max(D_hp, D_struct) &ge; 1.0</code>, whereas limb hits only kill via cumulative <code>D_struct &ge; 1.0</code>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- CHAPTER 3: ACE3 ARMOR QUANTIZATION & PENETRATION -->
+        <div class="modal-pane" data-math-pane="2">
+          <div class="math-section">
+            <h3><span>3A. Over-Capped Armor Logarithmic Scaling (#9063)</span> <span class="math-src-tag">ace_medical_engine_fnc_getItemArmor</span></h3>
+            <p>To prevent extreme modded vest/helmet configs from making units invincible, ACE 3.21.2 compresses item armor logarithmically whenever raw armor exceeds 6 tier steps (<code>armor &gt; 24</code> for vests where <code>step = 4</code>, or <code>armor &gt; 12</code> for helmets where <code>step = 2</code>):</p>
+            <div class="math-eq">&Delta;_step = 4 (vest)  |  2 (helmet)
+&alpha;_pt   = 0.6 (vest) | 1.0 (helmet)
+PT_c   = clamp(passThrough, 0.1, 1.0)
+
+A_item_ace = (A_raw &gt; 6 &middot; &Delta;_step)
+           ? 10 &middot; log10( A_raw / (PT_c ^ &alpha;_pt) )
+           : A_raw
+
+A_total_ace = max(1.0, A_uni + A_vest_ace + A_helm_ace)
+D_real      = D_hp &times; A_total_ace                      <span class="eq-comment">// Reconstructs unarmored raw damage inside ACE</span></div>
+          </div>
+
+          <div class="math-section">
+            <h3><span>3B. Discrete ACE Armor Levels I–V &amp; Post-Plate Damage</span> <span class="math-src-tag">ace_medical_damage_fnc_woundsHandlerArmorPenetration</span></h3>
+            <p>For <code>ACE_damageType = "bullet"</code>, when net armor above base skin (<code>A_net = A_total_ace &minus; 2.0</code>) exceeds one step (<code>&gt; 4</code> on torso, <code>&gt; 2</code> on head), ACE quantizes protection into 5 discrete RHAe plate thicknesses:</p>
+            <table class="math-table">
+              <thead>
+                <tr><th>ACE Tier</th><th>Level I</th><th>Level II</th><th>Level III</th><th>Level IV</th><th>Level V</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Plate RHAe (T_plate)</td><td>6 mm</td><td>15 mm</td><td>21 mm</td><td>40 mm</td><td>55 mm</td></tr>
+                <tr><td>Torso A_net Bracket (&Delta;=4)</td><td>4.1 – 10</td><td>10 – 14</td><td>14 – 18</td><td>18 – 22</td><td>&gt; 22</td></tr>
+                <tr><td>Head A_net Bracket (&Delta;=2)</td><td>2.1 – 5</td><td>5 – 7</td><td>7 – 9</td><td>9 – 11</td><td>&gt; 11</td></tr>
+              </tbody>
+            </table>
+            <div class="math-eq">idx     = clamp( round( (A_net &minus; 2&middot;&Delta;_step) / &Delta;_step ), 0, 4 )
+T_plate = [6, 15, 21, 40, 55][idx]                    <span class="eq-comment">// mm RHAe</span>
+
+v_ace   = (D_real / hit) &times; max(typicalSpeed, 1)
+d_pen   = v_ace &times; caliber &times; 0.015                     <span class="eq-comment">// Bullet RHAe mm at impact</span>
+r_pen   = min(1.0, d_pen / T_plate)                   <span class="eq-comment">// Fraction of plate perforated &isin; [0, 1]</span>
+D_final = (hit &times; r_pen) / 10.0                        <span class="eq-comment">// DAMAGE_SCALING_FACTOR = 10.0</span></div>
+            <p>When unarmored (<code>A_net &le; &Delta;_step</code>), the armor penetration handler is bypassed and <code>D_final = D_hp = D_raw / A_van</code> directly (so for base uniform <code>A_van = 2.0</code>, an unarmored muzzle hit yields <code>D_final &approx; hit / 2</code>, which is <strong>5&times; higher</strong> than the armored <code>hit / 10</code> ceiling!).</p>
+          </div>
+        </div>
+
+        <!-- CHAPTER 4: WOUND GENERATION & TRIANGULAR VARIANCE -->
+        <div class="modal-pane" data-math-pane="3">
+          <div class="math-section">
+            <h3><span>4A. Fractional Wound Count &amp; The 0.35 Penetration Threshold</span> <span class="math-src-tag">ACE_Medical_Injuries.hpp</span></h3>
+            <p>ACE interpolates expected wound count <code>E[N]</code> from <code>D_final</code> across <code>bullet</code> thresholds <code>[[20, 10], [4.5, 2], [3, 1], [0, 1]]</code> (so for <code>0 &lt; D_final &le; 3.0</code>, exactly <code>N = 1</code> wound is created and <code>d_wound = D_final</code>):</p>
+            <div class="math-eq">d_wound = D_final / N                                 <span class="eq-comment">// Per-wound damage driving wound type weights:</span>
+
+&bull; d_wound &le; 0.35 : 100% Contusion      (bleed=0.00, pain=0.3&times;2.2, sizeMult=3.2) &rarr; STOPPED (Blunt Bruise)
+&bull; 0.35 &lt; d_wound &lt; 1.0 : VelocityWound (bleed=0.20, pain=0.9, sizeMult=0.9) + Avulsion (bleed=0.10, pain=1.0)
+&bull; d_wound &ge; 1.50 : 100% Avulsion       (severe tissue cavitary wound)</div>
+            <p>Notice the mathematical consequence when <code>N = 1</code>: penetrating an ACE plate requires <code>d_wound &gt; 0.35 &hArr; (hit &times; r_pen) / 10 &gt; 0.35 &hArr; r_pen &gt; 3.5 / hit</code>! For a rifle round with <code>hit = 9.5</code>, bleeding begins at <code>r_pen = 36.8%</code> of plate thickness; if <code>hit &le; 3.5</code>, a bullet can <em>never</em> exceed <code>0.35</code> through armor even at <code>r_pen = 100%</code>.</p>
+          </div>
+
+          <div class="math-section">
+            <h3><span>4B. Wound Sizing &amp; Exact SQF Triangular Variance</span> <span class="math-src-tag">random [0.9, 1.0, 1.1]</span></h3>
+            <p>In live SQF execution, ACE multiplies incoming damage by <code>random [0.9, 1, 1.1]</code>—the sum of two uniform variables, forming a symmetric triangular distribution on <code>[0.9, 1.1]</code>. Rather than noisy Monte Carlo approximations, AmmoMaster computes exact analytical survival probabilities using the closed-form complementary CDF:</p>
+            <div class="math-eq">woundSize = clamp_lerp(0.1 &rarr; 2.0,  d_wound &times; sizeMult,  0.125 &rarr; 1.0)
+bleed_w   = woundSize &times; bleedMult &times; baseBleeding      <span class="eq-comment">// Fraction of cardiac output</span>
+pain_w    = woundSize &times; painMult  &times; basePain
+
+P(V &ge; r) = | 1.0                          if r &le; 0.9
+           | 1.0 &minus; 0.5 &middot; ((r &minus; 0.9)/0.1)&sup2; if 0.9 &lt; r &le; 1.0
+           | 0.5 &middot; ((1.1 &minus; r)/0.1)&sup2;       if 1.0 &lt; r &lt; 1.1
+           | 0.0                          if r &ge; 1.1</div>
+          </div>
+        </div>
+
+        <!-- CHAPTER 5: MEDICAL STATUS, KO, WEIBULL & BLEEDOUT -->
+        <div class="modal-pane" data-math-pane="4">
+          <div class="math-section">
+            <h3><span>5A. Vital Organ Death, Weibull Trauma &amp; Unconsciousness</span> <span class="math-src-tag">ace_medical_damage &amp; status</span></h3>
+            <p>Let <code>M_th</code> be the mission's <code>ACE_medical_playerDamageThreshold</code> (header <strong>Trauma Mult</strong>, default <code>1.0</code>):</p>
+            <div class="math-eq"><span class="eq-comment">// 1. Immediate Vital Organ / Cranial Fatality (per-wound check):</span>
+Head Fatal  : V &middot; d_wound &ge; 1.00                      <span class="eq-comment">// Instant lethal cranial destruction</span>
+Heart Fatal : V &middot; d_wound &ge; 0.60  with 5% roll        <span class="eq-comment">// HEART_HIT_CHANCE = 0.05 on Torso</span>
+
+<span class="eq-comment">// 2. Cumulative Part Trauma Weibull Fatality (XEH_preInit.sqf: 10% @ +0.5, 90% @ +0.8):</span>
+k = ln(ln(0.9)/ln(0.1)) / ln(0.5/0.8) &approx; 6.5593,   &lambda; = 0.5 / (&minus;ln 0.9)^(1/k) &approx; 0.7041
+T_part = 1.25 &middot; M_th (Head)  |  1.50 &middot; M_th (Torso)
+P_weibull(D_part) = 1 &minus; exp( &minus;( max(0, D_part &minus; T_part) / &lambda; )^k )
+
+<span class="eq-comment">// 3. Unconsciousness (fnc_handleIncapacitation):</span>
+Head Trauma KO  : D_head &ge; 0.50 &middot; M_th
+Torso Trauma KO : (d_wound &ge; 0.35) AND (D_body &ge; 1.00 &middot; M_th)
+Pain Shock KO   : (Pain &ge; 0.50) triggers a 10% roll per hit (PAIN_UNCONSCIOUS_CHANCE = 0.10)</div>
+          </div>
+
+          <div class="math-section">
+            <h3><span>5B. Regional Hemorrhage Caps &amp; Time to Cardiac Arrest</span> <span class="math-src-tag">ace_medical_status_fnc_getBloodLoss</span></h3>
+            <p>ACE caps raw bleeding per limb before multiplying by instantaneous Cardiac Output (<code>CO&#8320; = 0.095 L &times; 80 BPM / 60 = 0.12667 L/s = 126.7 mL/s</code>). Fatal exsanguination occurs when blood volume drops from <code>6.0 L</code> to <code>3.0 L</code> (mean decaying CO &approx; <code>82 mL/s</code>):</p>
+            <div class="math-eq">B_core  = min(1.0,  min(0.9, B_head) + min(1.0, B_body))
+B_limbs = min(1.0,  min(0.3, B_LA) + min(0.3, B_RA) + min(0.5, B_LL) + min(0.5, B_RL)) &times; (1 &minus; B_core)
+B_total = B_core + B_limbs                            <span class="eq-comment">// Tourniquet sets limb B_i = 0</span>
+
+Initial Flow (mL/s) = B_total &times; 126.67 mL/s
+Est. Time to Arrest = 3.0 L / (B_total &times; 0.082 L/s)   <span class="eq-comment">// Seconds from 6.0 L &rarr; 3.0 L</span></div>
+          </div>
+        </div>
+
+        <!-- CHAPTER 6: INVERSE SOLVERS & BI KINETIC PROFILES -->
+        <div class="modal-pane" data-math-pane="5">
+          <div class="math-section">
+            <h3><span>6A. Bisection Cutoff &amp; Inverse <code>caliber</code> Solvers</span> <span class="math-src-tag">computeMaxCriterionRange / solveCaliberForTargetRange</span></h3>
+            <p>Because G1–G8 velocity decay and multi-wound ACE thresholds are non-invertible algebraically, AmmoMaster uses fast monotonic bisection:</p>
+            <ul>
+              <li><strong>Max Cutoff Range (<code>computeMaxCriterionRange</code>):</strong> 22 bisection steps on <code>[0, 2000] m</code> (&plusmn;0.0005 m precision) testing whether the chosen goal passes at distance <code>x</code>.</li>
+              <li><strong>Inverse <code>caliber</code> Solver (<code>solveCaliberForTargetRange</code>):</strong> 28 bisection steps on <code>caliber &isin; [0.02, 30.0]</code> so the target plate transitions from <em>passing</em> to <em>stopped</em> right at <code>desiredDist + 0.25 m</code> (or targets <code>ratio = 0.85</code> at <code>0 m</code> for <strong>Stop @ 0m</strong> so even a <code>+10%</code> roll cannot penetrate).</li>
+              <li><strong>Minimum Viable <code>hit</code> Guard:</strong> If a user requests a cutoff &gt; 0m for <code>ace_bleed</code> (requires <code>hit &gt; 3.52</code>), <code>ace_heart</code> (<code>hit &ge; 6.0</code>), or <code>ace_ko</code> (<code>hit &ge; 10.0 &middot; M_th</code>), the solver automatically bumps <code>hit</code> to the mathematical minimum when dragging the penetration bar.</li>
+            </ul>
+          </div>
+
+          <div class="math-section">
+            <h3><span>6B. Decoupled <code>Lock Armor Pen Range</code> &amp; BI Energy Profiles</span> <span class="math-src-tag">Ammunition Balancing Invariants</span></h3>
+            <div class="math-eq"><span class="eq-comment">// Invariant maintaining constant post-armor wound damage D_final at cutoff distance x_c:</span>
+D_final(x_c) = [ hit &times; v(x_c) &times; caliber &times; 0.015 ] / (10 &times; T_plate) = const
+  &rArr;  caliber_new = caliber_old &times; (hit_old / hit_new)   <span class="eq-comment">(refined via full 28-step bisection for N &gt; 1 wounds)</span>
+
+<span class="eq-comment">// Bohemia Interactive empirical hit baseline from muzzle kinetic energy KE&#8320; (Joules):</span>
+hit_BI = k_profile &times; (&radic;KE&#8320; / 5.0)
+  where k_profile = 0.88 (Sub-caliber AP) | 1.00 (FMJ Ball) | 1.12 (Yawing EPR/OTM) | 1.25 (Expanding JHP)</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);" id="mathsChapterCounter">Chapter 1 of 6 &middot; Validated against Arma 3 2.18 &amp; ACE 3.21.2</span>
+          <button type="button" class="xs subtle-blue" id="btnSwitchMathsToTut">Open ? Step-by-Step Tutorial</button>
+        </div>
+        <div class="btn-row">
+          <button type="button" id="btnMathPrev">&larr; Previous</button>
+          <button type="button" class="primary" id="btnMathNext">Next Chapter &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
 const ARMA_DATABASE = __ARMA_DATABASE__;
