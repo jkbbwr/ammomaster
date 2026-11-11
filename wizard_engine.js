@@ -2180,13 +2180,29 @@ function syncAllRoundPanesFromCurrent(skipGoalDistSync = false) {
   if (barrelWrap && barrelSel) {
     if (r.ACE_barrelLengths && r.ACE_muzzleVelocities && r.ACE_barrelLengths.length === r.ACE_muzzleVelocities.length && r.ACE_barrelLengths.length > 0) {
       barrelWrap.style.display = "flex";
-      const curInit = Math.round(v0);
-      const defSpeed = o.initSpeed || v0;
-      barrelSel.innerHTML = `<option value="${defSpeed}">Magazine Default (${defSpeed} m/s)</option>` +
+      const defSpeed = Number(o.initSpeed) || v0;
+      const isMagDefault = Math.abs(v0 - defSpeed) < 0.25;
+      let matchedBarrelIdx = -1;
+      if (!isMagDefault) {
+        let bestDiff = 0.6;
+        r.ACE_muzzleVelocities.forEach((mv, idx) => {
+          const diff = Math.abs(Number(mv) - v0);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            matchedBarrelIdx = idx;
+          }
+        });
+      }
+      const isCustomVel = !isMagDefault && matchedBarrelIdx === -1;
+      const customOpt = isCustomVel
+        ? `<option value="${v0}" selected>Custom / Preset Velocity (${Number(v0.toFixed(1))} m/s)</option>`
+        : "";
+      barrelSel.innerHTML = customOpt +
+        `<option value="${defSpeed}" ${isMagDefault ? "selected" : ""}>Magazine Default (${defSpeed} m/s)</option>` +
         r.ACE_barrelLengths.map((bl, idx) => {
           const inches = (bl / 25.4).toFixed(1);
           const mv = r.ACE_muzzleVelocities[idx];
-          const selAttr = Math.abs(mv - curInit) < 1 ? "selected" : "";
+          const selAttr = idx === matchedBarrelIdx ? "selected" : "";
           return `<option value="${mv}" ${selAttr}>${bl} mm (${inches}") — ${mv} m/s</option>`;
         }).join("");
     } else {
@@ -2367,10 +2383,13 @@ function renderRoundDiffPills() {
   const rBc = (r.ACE_ballisticCoefficients && r.ACE_ballisticCoefficients[0]) || 0.3;
   const oBc = (orig.ACE_ballisticCoefficients && orig.ACE_ballisticCoefficients[0]) || 0.3;
 
+  const origTyp = orig.typicalSpeed || orig.initSpeed || 0;
+  const curTyp = r.typicalSpeed || r.initSpeed || 0;
   const diffs = [
     { label: "hit", oldVal: Number(orig.hit || 0).toFixed(2), newVal: Number(r.hit || 0).toFixed(2), changed: Math.abs((orig.hit || 0) - (r.hit || 0)) >= 0.02 },
     { label: "caliber", oldVal: Number(orig.caliber || 0).toFixed(3), newVal: Number(r.caliber || 0).toFixed(3), changed: Math.abs((orig.caliber || 0) - (r.caliber || 0)) >= 0.002 },
     { label: "initSpeed", oldVal: `${Math.round(orig.initSpeed || 0)}`, newVal: `${Math.round(r.initSpeed || 0)}m/s`, changed: Math.abs((orig.initSpeed || 0) - (r.initSpeed || 0)) >= 1 },
+    { label: "typicalSpeed", oldVal: `${Math.round(origTyp)}`, newVal: `${Math.round(curTyp)}m/s`, changed: Math.abs(origTyp - curTyp) >= 1 },
     { label: "airFriction", oldVal: Number(orig.airFriction || 0).toFixed(5), newVal: Number(r.airFriction || 0).toFixed(5), changed: Math.abs((orig.airFriction || 0) - (r.airFriction || 0)) >= 0.00002 },
     { label: "mass", oldVal: `${Number(orig.ACE_bulletMass || 0).toFixed(2)}`, newVal: `${Number(r.ACE_bulletMass || 0).toFixed(2)}g`, changed: Math.abs((orig.ACE_bulletMass || 0) - (r.ACE_bulletMass || 0)) >= 0.02 },
     { label: "BC", oldVal: Number(oBc).toFixed(3), newVal: Number(rBc).toFixed(3), changed: Math.abs(oBc - rBc) >= 0.003 }
@@ -2432,6 +2451,10 @@ function renderVestCoverageAndCaveats(ev) {
     }
     if (appState.selectedHitpoint === "HitPelvis" && ai.vestArmorRaw === 0 && ai.uniformArmor >= 10) {
       msgs.push(`<strong>Pelvis Base Armor:</strong> Arma 3 units default to <code>HitPelvis.armor = 6</code> (<code>uniformArmor = ${ai.uniformArmor}</code>), which ACE3 maps to <strong>Level II (15mm RHAe)</strong> even without a vest!`);
+    }
+    if (ev.usedArmorPenHandler && ev.penetratedPlate && ev.penRatio < 0.90 && appState.currentRound) {
+      const hitVal = Number(appState.currentRound.hit || 0).toFixed(1);
+      msgs.push(`<strong>ACE3 Partial-Penetration Wound:</strong> Bullet RHAe (<code>${ev.acePenDepth.toFixed(1)}mm</code>) is <code>${Math.round(ev.penRatio * 100)}%</code> of the <code>${ev.aceArmorThicknessMM}mm</code> plate, but <code>hit=${hitVal}</code> pushes <code>ACE Dmg = (hit &times; penRatio)/10 = ${ev.aceFinalDamage.toFixed(3)} &gt; 0.35</code>. Switch <strong>Goal</strong> to <code>1-Hit Torso KO</code> or <code>100% RHA Perforation</code> for strict plate defeat.`);
     }
     if (msgs.length > 0) {
       banner.style.display = "block";
@@ -3114,8 +3137,11 @@ function updateAllViews(skipGoalDistSync = false) {
     }
 
     const tierLabel = ev.aceArmorThicknessMM > 0 ? `Lvl ${ev.aceArmorLevel} (${ev.aceArmorThicknessMM}mm)` : "0mm Flesh";
+    const penSubTxt = (ev.usedArmorPenHandler && ev.aceArmorThicknessMM > 0)
+      ? `${ev.acePenDepth.toFixed(1)}/${ev.aceArmorThicknessMM}mm RHAe (${Math.round(ev.penRatio * 100)}%)`
+      : `${ev.acePenDepth.toFixed(1)}mm RHAe`;
     vHead.textContent = `${appState.currentRound.className} vs ${gearName} [${hpShort} · ${tierLabel}] @ ${Math.round(appState.rangeMeters)}m`;
-    vSub.textContent = `Vel: ${ev.effectiveSpeed.toFixed(0)} m/s · Pen: ${ev.acePenDepth.toFixed(1)}mm RHAe · ACE Dmg: ${ev.dmgPerWound.toFixed(3)} (${primaryWound})`;
+    vSub.textContent = `Vel: ${ev.effectiveSpeed.toFixed(0)} m/s · Pen: ${penSubTxt} · ACE Dmg: ${ev.dmgPerWound.toFixed(3)} (${primaryWound})`;
   }
 
   const maxPenGear = ev.aceArmorThicknessMM > 0
@@ -3548,6 +3574,7 @@ function applyRealWorldPhysicalEdits() {
 
 function applyRealWorldPreset(presetId) {
   if (presetId === "__ACTIVE__") {
+    if (appState.currentRound) delete appState.currentRound._appliedRwPresetId;
     updateAllViews();
     return;
   }
@@ -3555,12 +3582,14 @@ function applyRealWorldPreset(presetId) {
   if (!preset || !appState.currentRound) return;
 
   const r = appState.currentRound;
-  const syncTyp = document.getElementById("chkSyncTypicalSpeed") && document.getElementById("chkSyncTypicalSpeed").checked;
+  r._appliedRwPresetId = preset.id;
 
   r.ACE_bulletMass = preset.massGrams;
   r.ACE_caliber = preset.diamMM;
   r.initSpeed = preset.muzzleVel;
-  if (syncTyp) r.typicalSpeed = preset.muzzleVel;
+  // Always align typicalSpeed with muzzleVel when applying a complete cartridge spec
+  // so canonical hit (computed at preset.muzzleVel) isn't scaled against a stale parent typicalSpeed
+  r.typicalSpeed = preset.muzzleVel;
   syncAceBarrelMuzzleVelocities(r, appState.originalRound);
   r.ACE_dragModel = preset.dragModel;
   r.ACE_ballisticCoefficients = [preset.bc];
@@ -3570,11 +3599,19 @@ function applyRealWorldPreset(presetId) {
   r.hit = Number(computeCanonicalBIHit(preset.massGrams, preset.muzzleVel, parseFloat(preset.profile) || 1.0).toFixed(2));
 
   if (document.getElementById("chkRwApplyPenGoal") && document.getElementById("chkRwApplyPenGoal").checked) {
+    const crit = preset.criterion || "ace_bleed";
+    const critSel = document.getElementById("rwPenCriterion");
+    if (critSel) critSel.value = crit;
     document.getElementById("rwArmorGoalLevel").value = preset.armorLevel;
-    const spec = buildTargetSpecFromGoal(preset.armorLevel);
-    const solved = solveCaliberForTargetRange(r, spec, preset.maxPenDist, getActiveCriterion(), getSimOpts(), true);
-    r.caliber = solved.caliber;
-    r.hit = solved.hit;
+
+    if (preset.rha0MM && preset.rha0MM > 0) {
+      r.caliber = Number((preset.rha0MM / Math.max(1, preset.muzzleVel * ACE_CONST.ARMOR_PENETRABILITY)).toFixed(4));
+    } else {
+      const spec = buildTargetSpecFromGoal(preset.armorLevel);
+      const solved = solveCaliberForTargetRange(r, spec, preset.maxPenDist, crit, getSimOpts(), true);
+      r.caliber = solved.caliber;
+      r.hit = solved.hit;
+    }
   }
   updateAllViews();
 }
@@ -4016,6 +4053,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (btnAutoMatch) btnAutoMatch.addEventListener("click", applySuggestedRealWorldMatch);
 
   document.getElementById("btnRwPullCurrent").addEventListener("click", () => {
+    if (appState.currentRound) delete appState.currentRound._appliedRwPresetId;
     document.getElementById("rwPresetSelect").value = "__ACTIVE__";
     updateAllViews();
   });
