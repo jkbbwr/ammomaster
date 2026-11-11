@@ -28,6 +28,33 @@ const ACE_DAMAGE_COLORS = [
   [0.00, 0.00, 1.00, 1]
 ];
 
+// High-luminance Okabe–Ito colorblind-safe body dummy ramps (Yellow → Amber → Vivid Magenta vs Ice Cyan → Sky Blue)
+const ACE_BLOOD_LOSS_COLORS_CB = [
+  [0.00, 0.00, 0.00, 1],
+  [1.00, 0.96, 0.66, 1],
+  [1.00, 0.89, 0.46, 1],
+  [1.00, 0.79, 0.30, 1],
+  [0.98, 0.66, 0.38, 1],
+  [0.97, 0.53, 0.52, 1],
+  [0.96, 0.42, 0.63, 1],
+  [0.95, 0.32, 0.70, 1],
+  [0.93, 0.25, 0.73, 1],
+  [0.93, 0.18, 0.65, 1]
+];
+
+const ACE_DAMAGE_COLORS_CB = [
+  [0.00, 0.00, 0.00, 1],
+  [0.78, 0.96, 1.00, 1],
+  [0.64, 0.91, 1.00, 1],
+  [0.50, 0.85, 1.00, 1],
+  [0.38, 0.78, 0.99, 1],
+  [0.28, 0.72, 0.98, 1],
+  [0.22, 0.66, 0.98, 1],
+  [0.16, 0.58, 0.96, 1],
+  [0.10, 0.50, 0.94, 1],
+  [0.05, 0.42, 0.90, 1]
+];
+
 // Weibull constants from ace_medical_engine/XEH_preInit.sqf
 const WEIBULL_B1 = -Math.log(1 - 0.1);
 const WEIBULL_B2 = -Math.log(1 - 0.9);
@@ -888,15 +915,17 @@ const patientState = {
 };
 
 function aceBloodLossToRGBA(bloodLoss) {
+  const ramp = appState.colorblindMode ? ACE_BLOOD_LOSS_COLORS_CB : ACE_BLOOD_LOSS_COLORS;
   const fr = Math.max(0, Math.min(1, bloodLoss / ACE_CONST.BLOOD_LOSS_RED_THRESHOLD));
-  const idx = Math.ceil(fr * (ACE_BLOOD_LOSS_COLORS.length - 1));
-  return ACE_BLOOD_LOSS_COLORS[idx] || ACE_BLOOD_LOSS_COLORS[0];
+  const idx = Math.ceil(fr * (ramp.length - 1));
+  return ramp[idx] || ramp[0];
 }
 
 function aceDamageToRGBA(damageNorm) {
+  const ramp = appState.colorblindMode ? ACE_DAMAGE_COLORS_CB : ACE_DAMAGE_COLORS;
   const fr = Math.max(0, Math.min(1, damageNorm / ACE_CONST.DAMAGE_BLUE_THRESHOLD));
-  const idx = Math.ceil(fr * (ACE_DAMAGE_COLORS.length - 1));
-  return ACE_DAMAGE_COLORS[idx] || ACE_DAMAGE_COLORS[0];
+  const idx = Math.ceil(fr * (ramp.length - 1));
+  return ramp[idx] || ramp[0];
 }
 
 function resetPatientDummy() {
@@ -1171,7 +1200,9 @@ function renderAceBodyDummy(selectedPartIndex, damageThreshold = 1.0) {
     drawTintedTexture(ctx, pc.tex, rgba, 2.1);
 
     if (pc.bone && patientState.fractures[pc.idx] !== 0) {
-      const boneColor = patientState.fractures[pc.idx] === 1 ? [1, 0.1, 0.1, 1] : [0.2, 0.4, 1, 1];
+      const boneColor = patientState.fractures[pc.idx] === 1
+        ? (appState.colorblindMode ? [0.96, 0.30, 0.72, 1] : [1, 0.1, 0.1, 1])
+        : [0.2, 0.65, 1, 1];
       drawTintedTexture(ctx, pc.bone, boneColor, 1.5);
     }
     if (pc.tq && patientState.tourniquets[pc.idx] > 0) {
@@ -1190,9 +1221,10 @@ function updateAceInjuryListDOM(selectedPartIndex, shotResult, damageThreshold =
   const shotsLabelEl = document.getElementById("aceDummyShotsLabel");
   if (!listEl || !triageEl) return;
 
+  const pal = getThemePalette();
   if (modeLabelEl) {
     modeLabelEl.textContent = patientState.mode === "live" ? "LIVE MULTI-SHOT" : "1-SHOT PREVIEW";
-    modeLabelEl.style.color = patientState.mode === "live" ? "#f97316" : "#eab308";
+    modeLabelEl.style.color = patientState.mode === "live" ? pal.warn : "#eab308";
   }
   if (shotsLabelEl) {
     shotsLabelEl.textContent = `Shots: ${patientState.shotsFired}`;
@@ -1206,18 +1238,18 @@ function updateAceInjuryListDOM(selectedPartIndex, shotResult, damageThreshold =
     if (totalBleed < koThresh * 0.1) {
       entries.push({ text: "Slowly losing blood", color: "#facc15" });
     } else if (totalBleed < koThresh * 0.5) {
-      entries.push({ text: "Moderately losing blood", color: "#fb923c" });
+      entries.push({ text: "Moderately losing blood", color: pal.warnText });
     } else if (totalBleed < koThresh * 1.0) {
-      entries.push({ text: "Severely losing blood", color: "#f97316" });
+      entries.push({ text: "Severely losing blood", color: pal.warn });
     } else {
-      entries.push({ text: "Massively losing blood", color: "#ef4444" });
+      entries.push({ text: "Massively losing blood", color: pal.danger });
     }
     const initMlPerSec = totalBleed * (ACE_CONST.HEALTHY_CARDIAC_OUTPUT_LPS * 1000);
     const meanMlPerSec = totalBleed * (ACE_CONST.MEAN_BLEEDOUT_CO_LPS * 1000);
     const secToFatal = meanMlPerSec > 0 ? Math.round(3000 / meanMlPerSec) : 9999;
     entries.push({
       text: `Bleed: ${totalBleed.toFixed(3)} CO (${initMlPerSec.toFixed(1)} mL/s · ~${secToFatal}s fatal)`,
-      color: "#fca5a5"
+      color: pal.dangerSoft
     });
   } else {
     entries.push({ text: "No bleeding", color: "rgba(255,255,255,0.35)" });
@@ -1226,7 +1258,7 @@ function updateAceInjuryListDOM(selectedPartIndex, shotResult, damageThreshold =
   const pain = patientState.pain;
   if (pain > 0.001) {
     if (pain >= ACE_CONST.PAIN_UNCONSCIOUS) {
-      entries.push({ text: `In severe pain (${(pain * 100).toFixed(0)}% · 10% KO roll)`, color: "#f87171" });
+      entries.push({ text: `In severe pain (${(pain * 100).toFixed(0)}% · 10% KO roll)`, color: pal.dangerText });
     } else if (pain > ACE_CONST.PAIN_UNCONSCIOUS / 5) {
       entries.push({ text: `In pain (${(pain * 100).toFixed(0)}%)`, color: "#fde047" });
     } else {
@@ -1246,12 +1278,12 @@ function updateAceInjuryListDOM(selectedPartIndex, shotResult, damageThreshold =
     entries.push({ text: "[T] Tourniquet Applied", color: "#60a5fa" });
   }
   if (patientState.fractures[selectedPartIndex] === 1) {
-    entries.push({ text: "Fractured Bone (> 0.50 limb dmg)", color: "#ef4444", bold: true });
+    entries.push({ text: "Fractured Bone (> 0.50 limb dmg)", color: pal.danger, bold: true });
   } else if (patientState.fractures[selectedPartIndex] === -1) {
     entries.push({ text: "[S] Splint Applied", color: "#60a5fa" });
   }
   if (selectedPartIndex >= 4 && patientState.limping) {
-    entries.push({ text: "Limping (> 0.30 leg damage)", color: "#fb923c" });
+    entries.push({ text: "Limping (> 0.30 leg damage)", color: pal.warn });
   }
 
   const openW = patientState.openWounds[partKey] || [];
@@ -1283,21 +1315,21 @@ function updateAceInjuryListDOM(selectedPartIndex, shotResult, damageThreshold =
     .join("");
 
   if (patientState.isFatal) {
-    triageEl.style.background = "#991b1b";
-    triageEl.style.color = "#fecaca";
-    triageEl.textContent = `BLACK / DEAD — ${patientState.fatalReason}`;
+    triageEl.style.background = pal.deadBg;
+    triageEl.style.color = pal.dangerSoft;
+    triageEl.textContent = `▲ BLACK / DEAD — ${patientState.fatalReason}`;
   } else if (patientState.isUnconscious || totalBleed >= koThresh * 0.5) {
-    triageEl.style.background = "#dc2626";
+    triageEl.style.background = pal.dangerBg;
     triageEl.style.color = "#fff";
-    triageEl.textContent = `IMMEDIATE (T1) — ${patientState.isUnconscious ? (patientState.koReason || "UNCONSCIOUS") : "SEVERE HEMORRHAGE"}`;
+    triageEl.textContent = `▲ IMMEDIATE (T1) — ${patientState.isUnconscious ? (patientState.koReason || "UNCONSCIOUS") : "SEVERE HEMORRHAGE"}`;
   } else if (totalBleed > 0.001 || patientState.fractures.some(f => f === 1)) {
     triageEl.style.background = "#d97706";
     triageEl.style.color = "#000";
-    triageEl.textContent = "DELAYED (T2) — OPEN WOUNDS / FRACTURE";
+    triageEl.textContent = "◆ DELAYED (T2) — OPEN WOUNDS / FRACTURE";
   } else if (patientState.pain > 0) {
-    triageEl.style.background = "#16a34a";
+    triageEl.style.background = pal.goodBg;
     triageEl.style.color = "#fff";
-    triageEl.textContent = "MINIMAL (T3) — BLUNT CONTUSION ONLY (PLATE STOPPED)";
+    triageEl.textContent = "■ MINIMAL (T3) — BLUNT CONTUSION ONLY (PLATE STOPPED)";
   } else {
     triageEl.style.background = "#1e293b";
     triageEl.style.color = "#94a3b8";
@@ -1314,6 +1346,7 @@ const appState = {
   impactAngleDeg: 0,
   useAdvBallistics: false,
   alternateArmorPen: true,
+  colorblindMode: false,
   damageThreshold: 1.0,
   dragMode: "bc", // "bc" | "vel"
   originalRound: null,
@@ -1327,6 +1360,53 @@ const appState = {
   showCustomRhaRow: false,
   rwUnits: "metric"
 };
+
+function getThemePalette() {
+  if (appState.colorblindMode) {
+    return {
+      good: "#38bdf8",
+      goodText: "#7dd3fc",
+      goodBg: "#0284c7",
+      danger: "#ec4899",
+      dangerHi: "#f472b6",
+      dangerText: "#f9a8d4",
+      dangerSoft: "#fbcfe8",
+      dangerBg: "#be185d",
+      deadBg: "#831843",
+      warn: "#f59e0b",
+      warnText: "#fde047",
+      stop: "#38bdf8",
+      zeroBar: "#818cf8"
+    };
+  }
+  return {
+    good: "#22c55e",
+    goodText: "#4ade80",
+    goodBg: "#16a34a",
+    danger: "#ef4444",
+    dangerHi: "#f43f5e",
+    dangerText: "#f87171",
+    dangerSoft: "#fca5a5",
+    dangerBg: "#dc2626",
+    deadBg: "#991b1b",
+    warn: "#f97316",
+    warnText: "#fdba74",
+    stop: "#38bdf8",
+    zeroBar: "#38bdf8"
+  };
+}
+
+function formatPenStatusBadge(aceArmorThicknessMM, penetratedPlate, pastTense = false) {
+  const cb = appState.colorblindMode;
+  if (aceArmorThicknessMM === 0) {
+    return `<span class="badge badge-amber">${cb ? "◆ " : ""}FLESH</span>`;
+  }
+  if (penetratedPlate) {
+    const lbl = pastTense ? "PENETRATED" : "PENETRATES";
+    return `<span class="badge badge-red">${cb ? "▲ " : ""}${lbl}</span>`;
+  }
+  return `<span class="badge badge-green">${cb ? "■ " : ""}STOPPED</span>`;
+}
 
 function cleanDisplayString(str) {
   if (!str) return "";
@@ -1567,12 +1647,13 @@ function renderAllCharts() {
     ]
   });
 
+  const pal = getThemePalette();
   const rhaThresholds = [];
   if (probeEv.aceArmorThicknessMM > 0) {
     rhaThresholds.push({
       value: probeEv.aceArmorThicknessMM,
       label: `Armor Lvl ${probeEv.aceArmorLevel} (${probeEv.aceArmorThicknessMM} mm)`,
-      color: "#f97316"
+      color: pal.warn
     });
   }
   drawRangeChart("chartPenetration", {
@@ -1588,16 +1669,16 @@ function renderAllCharts() {
   });
 
   const dmgThresholds = [
-    { value: ACE_CONST.PENETRATION_THRESHOLD, label: "Penetrate / Bleed (0.35)", color: "#22c55e" }
+    { value: ACE_CONST.PENETRATION_THRESHOLD, label: "Penetrate / Bleed (0.35)", color: pal.good }
   ];
   if (probeEv.bodyPartIndex === 0) {
-    dmgThresholds.push({ value: 0.5 * appState.damageThreshold, label: `Head KO (${(0.5 * appState.damageThreshold).toFixed(2)})`, color: "#f97316" });
-    dmgThresholds.push({ value: ACE_CONST.HEAD_DAMAGE_THRESHOLD, label: "Fatal Head (1.00)", color: "#ef4444" });
+    dmgThresholds.push({ value: 0.5 * appState.damageThreshold, label: `Head KO (${(0.5 * appState.damageThreshold).toFixed(2)})`, color: pal.warn });
+    dmgThresholds.push({ value: ACE_CONST.HEAD_DAMAGE_THRESHOLD, label: "Fatal Head (1.00)", color: pal.danger });
   } else if (probeEv.bodyPartIndex === 1) {
-    dmgThresholds.push({ value: ACE_CONST.ORGAN_DAMAGE_THRESHOLD, label: "Heart 5% (0.60)", color: "#f97316" });
-    dmgThresholds.push({ value: 1.0 * appState.damageThreshold, label: `Torso KO (${(1.0 * appState.damageThreshold).toFixed(2)})`, color: "#ef4444" });
+    dmgThresholds.push({ value: ACE_CONST.ORGAN_DAMAGE_THRESHOLD, label: "Heart 5% (0.60)", color: pal.warn });
+    dmgThresholds.push({ value: 1.0 * appState.damageThreshold, label: `Torso KO (${(1.0 * appState.damageThreshold).toFixed(2)})`, color: pal.danger });
   } else {
-    dmgThresholds.push({ value: ACE_CONST.FRACTURE_DAMAGE_THRESHOLD, label: "Limb Fracture (0.50)", color: "#ef4444" });
+    dmgThresholds.push({ value: ACE_CONST.FRACTURE_DAMAGE_THRESHOLD, label: "Limb Fracture (0.50)", color: pal.danger });
   }
 
   drawRangeChart("chartAceDamage", {
@@ -1608,7 +1689,7 @@ function renderAllCharts() {
     thresholds: dmgThresholds,
     series: [
       { points: origAceDmgPts, color: "rgba(148, 163, 184, 0.45)", dashed: true },
-      { points: aceDmgPts, color: "#ef4444" }
+      { points: aceDmgPts, color: pal.danger }
     ]
   });
 
@@ -1618,12 +1699,12 @@ function renderAllCharts() {
     yMax: Math.max(0.25, bleedPts[0].y * 1.2),
     hoverY: probeEv.expectedBleedRate,
     thresholds: [
-      { value: 0.25, label: "Severe Bleed (0.25 CO)", color: "#f97316" },
-      { value: 0.50, label: "Massive Bleed (0.50 CO)", color: "#ef4444" }
+      { value: 0.25, label: "Severe Bleed (0.25 CO)", color: pal.warn },
+      { value: 0.50, label: "Massive Bleed (0.50 CO)", color: pal.danger }
     ],
     series: [
       { points: origBleedPts, color: "rgba(148, 163, 184, 0.45)", dashed: true },
-      { points: bleedPts, color: "#f43f5e" }
+      { points: bleedPts, color: pal.dangerHi }
     ]
   });
 }
@@ -2101,19 +2182,22 @@ function renderTunerPenetrationMatrix() {
 
     const pct = Math.max(0, Math.min(100, (maxDist / MATRIX_MAX_RANGE) * 100));
     const origPct = Math.max(0, Math.min(100, (origDist / MATRIX_MAX_RANGE) * 100));
+    const pal = getThemePalette();
     const delta = maxDist - origDist;
     const deltaStr = Math.abs(delta) >= 2
-      ? `<span class="pen-row-delta" style="color:${delta > 0 ? "#4ade80" : "#f87171"};">${delta > 0 ? "+" : ""}${delta}m</span>`
+      ? `<span class="pen-row-delta" style="color:${delta > 0 ? pal.goodText : pal.dangerText};">${delta > 0 ? "+" : ""}${delta}m</span>`
       : `<span class="pen-row-delta" style="color:var(--text-muted);">&mdash;</span>`;
 
     const isTargetCls = row.id === goalId ? "active-target" : "";
     const eqCls = row.isEquipped ? "equipped-row" : "";
 
-    let barColor = "#22c55e";
+    let barColor = pal.good;
+    let barExtraCls = "";
     if (maxDist <= 0) {
-      barColor = "#38bdf8";
+      barColor = pal.zeroBar;
     } else if (maxDist < curRange) {
       barColor = "#f59e0b";
+      barExtraCls = "cb-short-stripe";
     }
 
     const inpVal = (focusedInp === row.id && focusedVal !== null) ? focusedVal : maxDist;
@@ -2121,7 +2205,7 @@ function renderTunerPenetrationMatrix() {
     return `<div class="pen-matrix-row ${isTargetCls} ${eqCls}" data-row-id="${row.id}">
       <span style="cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" class="pen-row-label" data-row-id="${row.id}" title="Click to lock ${row.label} when adjusting Flesh Lethality">${row.label}</span>
       <div class="pen-bar-track" data-row-id="${row.id}" title="Drag left/right to set penetration cutoff range for ${row.label}">
-        <div class="pen-bar-fill" style="width:${pct.toFixed(1)}%;background:${barColor};"></div>
+        <div class="pen-bar-fill ${barExtraCls}" style="width:${pct.toFixed(1)}%;background:${barColor};"></div>
         <div class="pen-bar-orig-tick" style="left:${origPct.toFixed(1)}%;" title="Original Preset Cutoff: ${origDist}m"></div>
         <div class="pen-bar-handle" style="left:${pct.toFixed(1)}%;"></div>
         <div class="pen-bar-marker" style="left:${markerPct.toFixed(1)}%;"></div>
@@ -2262,15 +2346,19 @@ function renderHitzoneButtons() {
   if (!container || !appState.currentRound) return;
   const opts = getSimOpts();
 
+  const pal = getThemePalette();
   container.innerHTML = HITZONES.map(hz => {
     const ev = evaluateShot(appState.currentRound, appState.armorLoadout, hz.id, appState.rangeMeters, opts);
     const active = hz.id === appState.selectedHitpoint ? "active" : "";
     const tierShort = ev.aceArmorLevel > 0 ? `L${ev.aceArmorLevel}·${ev.aceArmorThicknessMM}mm` : "0mm";
     const dotColor = ev.aceArmorLevel === 0
-      ? "#f97316"
-      : (ev.penetratedPlate ? "#ef4444" : "#38bdf8");
+      ? pal.warn
+      : (ev.penetratedPlate ? pal.danger : pal.stop);
+    const dotShapeCls = ev.aceArmorLevel === 0
+      ? ""
+      : (ev.penetratedPlate ? "cb-dot-pen" : "cb-dot-stop");
     return `<button type="button" class="hz-btn ${active}" data-hp="${hz.id}">
-      <span class="hz-status-dot" style="background:${dotColor};"></span>
+      <span class="hz-status-dot ${dotShapeCls}" style="background:${dotColor};"></span>
       <span>${hz.id.replace("Hit", "")}</span>
       <small>${tierShort}</small>
     </button>`;
@@ -2302,9 +2390,7 @@ function renderAllHitzonesComparisonTable() {
       ? `<span class="badge badge-amber">L${ev.aceArmorLevel} (${ev.aceArmorThicknessMM}mm)</span>`
       : `<span class="badge badge-blue">Unarmored</span>`;
 
-    const penBadge = ev.aceArmorThicknessMM === 0
-      ? `<span class="badge badge-amber">FLESH</span>`
-      : (ev.penetratedPlate ? `<span class="badge badge-red">PENETRATED</span>` : `<span class="badge badge-green">STOPPED</span>`);
+    const penBadge = formatPenStatusBadge(ev.aceArmorThicknessMM, ev.penetratedPlate, true);
 
     const primaryWound = ev.woundBreakdowns.length > 0
       ? ev.woundBreakdowns.slice().sort((a, b) => b.probability - a.probability)[0].displayName
@@ -2428,9 +2514,7 @@ function renderMultiVestBenchmarkTable() {
       ? `<span class="badge badge-amber">Lvl ${ev.aceArmorLevel} (${ev.aceArmorThicknessMM}mm)</span>`
       : `<span class="badge badge-blue">Unarmored</span>`;
 
-    const statusBadge = ev.aceArmorThicknessMM === 0
-      ? `<span class="badge badge-amber">FLESH</span>`
-      : (ev.penetratedPlate ? `<span class="badge badge-red">PENETRATES</span>` : `<span class="badge badge-green">STOPPED</span>`);
+    const statusBadge = formatPenStatusBadge(ev.aceArmorThicknessMM, ev.penetratedPlate, false);
 
     const clickAttr = bt.vestClass ? `style="cursor:pointer;" title="Click to equip ${bt.vestClass}" onclick="window.equipBenchmarkVest('${bt.vestClass}')"` : "";
 
@@ -2585,9 +2669,7 @@ function renderCaliberLineupTable() {
     const v0 = Math.round(Number(rnd.initSpeed) || Number(rnd.typicalSpeed) || 0);
     const rha0 = (v0 * (Number(rnd.caliber) || 1) * ACE_CONST.ARMOR_PENETRABILITY).toFixed(1);
 
-    const statusBadge = ev.aceArmorThicknessMM === 0
-      ? `<span class="badge badge-amber">FLESH</span>`
-      : (ev.penetratedPlate ? `<span class="badge badge-red">PENETRATES</span>` : `<span class="badge badge-green">STOPPED</span>`);
+    const statusBadge = formatPenStatusBadge(ev.aceArmorThicknessMM, ev.penetratedPlate, false);
 
     const clickAttr = item.roundClass
       ? `style="cursor:pointer;" title="Click to load ${item.roundClass} into editor" onclick="window.equipLineupRound('${item.roundClass}')"`
@@ -2850,8 +2932,9 @@ function renderConfigExporter() {
 
 function formatSignedDelta(delta, decimals = 0, unit = "") {
   if (Math.abs(delta) < Math.pow(10, -decimals) * 0.6) return "";
+  const pal = getThemePalette();
   const sign = delta > 0 ? "+" : "";
-  const color = delta > 0 ? "#4ade80" : "#f87171";
+  const color = delta > 0 ? pal.goodText : pal.dangerText;
   return `<span style="color:${color};">${sign}${delta.toFixed(decimals)}${unit}</span>`;
 }
 
@@ -2881,21 +2964,23 @@ function updateAllViews(skipGoalDistSync = false) {
     ? ev.woundBreakdowns.slice().sort((a, b) => b.probability - a.probability)[0].displayName
     : "No Wound";
 
+  const pal = getThemePalette();
+  const cb = appState.colorblindMode;
   if (vBanner && vPill && vHead && vSub) {
     vBanner.classList.remove("verdict-pen", "verdict-stop", "verdict-unarm");
     if (ev.aceArmorThicknessMM <= 0) {
       vBanner.classList.add("verdict-unarm");
-      vPill.textContent = "UNARMORED HIT";
-      vPill.style.background = "rgba(249, 115, 22, 0.22)";
-      vPill.style.color = "#fdba74";
+      vPill.textContent = `${cb ? "◆ " : ""}UNARMORED HIT`;
+      vPill.style.background = cb ? "rgba(250, 204, 21, 0.22)" : "rgba(249, 115, 22, 0.22)";
+      vPill.style.color = pal.warnText;
     } else if (ev.penetratedPlate) {
       vBanner.classList.add("verdict-pen");
-      vPill.textContent = "PENETRATES ARMOR";
-      vPill.style.background = "rgba(239, 68, 68, 0.25)";
-      vPill.style.color = "#fca5a5";
+      vPill.textContent = `${cb ? "▲ " : ""}PENETRATES ARMOR`;
+      vPill.style.background = cb ? "rgba(236, 72, 153, 0.28)" : "rgba(239, 68, 68, 0.25)";
+      vPill.style.color = pal.dangerSoft;
     } else {
       vBanner.classList.add("verdict-stop");
-      vPill.textContent = "STOPPED BY PLATE";
+      vPill.textContent = `${cb ? "■ " : ""}STOPPED BY PLATE`;
       vPill.style.background = "rgba(56, 189, 248, 0.22)";
       vPill.style.color = "#7dd3fc";
     }
@@ -2929,14 +3014,14 @@ function updateAllViews(skipGoalDistSync = false) {
   document.getElementById("kpiRhaDelta").innerHTML = formatSignedDelta(ev.acePenDepth - origEv.acePenDepth, 1, "mm");
 
   document.getElementById("kpiAceDamage").textContent = ev.dmgPerWound.toFixed(3);
-  document.getElementById("kpiAceDamage").style.color = ev.penetratedPlate ? "#ef4444" : "#38bdf8";
+  document.getElementById("kpiAceDamage").style.color = ev.penetratedPlate ? pal.danger : pal.stop;
   document.getElementById("kpiAceDamageSub").textContent = ev.penetratedPlate
-    ? `PENETRATES (> 0.35 · ${primaryWound})`
-    : `STOPPED (<= 0.35 · Contusion)`;
+    ? `${cb ? "▲ " : ""}PENETRATES (> 0.35 · ${primaryWound})`
+    : `${cb ? "■ " : ""}STOPPED (<= 0.35 · Contusion)`;
   document.getElementById("kpiDmgDelta").innerHTML = formatSignedDelta(ev.dmgPerWound - origEv.dmgPerWound, 3, "");
 
   document.getElementById("kpiLethality").textContent = `${(ev.koProb * 100).toFixed(0)}% / ${(ev.totalFatalProb * 100).toFixed(0)}%`;
-  document.getElementById("kpiLethality").style.color = ev.totalFatalProb >= 0.5 ? "#ef4444" : (ev.koProb >= 0.5 ? "#f97316" : "#eab308");
+  document.getElementById("kpiLethality").style.color = ev.totalFatalProb >= 0.5 ? pal.danger : (ev.koProb >= 0.5 ? pal.warn : "#eab308");
   document.getElementById("kpiLethalitySub").textContent = `1-Hit KO / 1-Hit Fatal (Trauma Mult ${appState.damageThreshold.toFixed(1)})`;
   document.getElementById("kpiFatalDelta").innerHTML = formatSignedDelta((ev.koProb - origEv.koProb) * 100, 0, "% KO");
 
@@ -3511,6 +3596,24 @@ window.addEventListener("DOMContentLoaded", () => {
     appState.useAdvBallistics = e.target.checked;
     updateAllViews();
   });
+  const chkCb = document.getElementById("chkColorblindMode");
+  if (chkCb) {
+    try {
+      if (window.localStorage && window.localStorage.getItem("ammomaster_cb_mode") === "1") {
+        appState.colorblindMode = true;
+        chkCb.checked = true;
+        document.body.classList.add("cb-mode");
+      }
+    } catch (_) {}
+    chkCb.addEventListener("change", e => {
+      appState.colorblindMode = Boolean(e.target.checked);
+      document.body.classList.toggle("cb-mode", appState.colorblindMode);
+      try {
+        if (window.localStorage) window.localStorage.setItem("ammomaster_cb_mode", appState.colorblindMode ? "1" : "0");
+      } catch (_) {}
+      updateAllViews();
+    });
+  }
   document.getElementById("inpDamageThreshold").addEventListener("input", e => {
     appState.damageThreshold = Math.max(0.2, parseFloat(e.target.value) || 1.0);
     updateAllViews();

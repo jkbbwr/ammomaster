@@ -1876,3 +1876,92 @@ pre.config-export {
 .spotlight-pulse {
   animation: workbenchSpotlightPulse 1.8s ease-out 2;
 }
+
+/* ========================================================================= */
+/* Colorblind-Safe Mode (Okabe–Ito Cyan / Gold / Magenta + Shape Patterns)   */
+/* ========================================================================= */
+body.cb-mode {
+  --ace-green: #38bdf8;
+  --ace-red: #ec4899;
+  --ace-orange: #f59e0b;
+  --ace-blue: #60a5fa;
+  --accent: #facc15;
+  --accent-hi: #fde047;
+}
+
+body.cb-mode #lblColorblindToggle {
+  border-color: rgba(56, 189, 248, 0.65);
+  background: rgba(56, 189, 248, 0.14);
+  color: #bae6fd;
+}
+
+body.cb-mode .badge-green {
+  background: rgba(56, 189, 248, 0.20);
+  color: #7dd3fc;
+  border: 1px solid rgba(56, 189, 248, 0.55);
+}
+
+body.cb-mode .badge-red {
+  background: rgba(236, 72, 153, 0.22);
+  color: #f9a8d4;
+  border: 1px dashed rgba(244, 114, 182, 0.72);
+}
+
+body.cb-mode .badge-amber {
+  background: rgba(245, 158, 11, 0.20);
+  color: #fde047;
+  border: 1px solid rgba(250, 204, 21, 0.55);
+}
+
+body.cb-mode button.danger {
+  border-color: rgba(236, 72, 153, 0.50);
+  color: #f9a8d4;
+}
+
+body.cb-mode button.danger:hover {
+  background: rgba(236, 72, 153, 0.20);
+  border-color: #f472b6;
+}
+
+body.cb-mode .verdict-banner.verdict-pen {
+  border-color: rgba(236, 72, 153, 0.72);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(236, 72, 153, 0.12),
+      rgba(236, 72, 153, 0.12) 8px,
+      rgba(13, 18, 27, 0.96) 8px,
+      rgba(13, 18, 27, 0.96) 16px
+    );
+}
+
+body.cb-mode .verdict-banner.verdict-stop {
+  border-color: rgba(56, 189, 248, 0.70);
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.34) 0%, rgba(13, 18, 27, 0.96) 72%);
+}
+
+body.cb-mode .verdict-banner.verdict-unarm {
+  border-color: rgba(250, 204, 21, 0.62);
+  background: linear-gradient(135deg, rgba(161, 98, 7, 0.30) 0%, rgba(13, 18, 27, 0.96) 72%);
+}
+
+body.cb-mode .pen-bar-fill.cb-short-stripe {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(0, 0, 0, 0.28),
+    rgba(0, 0, 0, 0.28) 4px,
+    transparent 4px,
+    transparent 8px
+  ) !important;
+}
+
+body.cb-mode .hz-status-dot.cb-dot-pen {
+  border-radius: 1px;
+  transform: rotate(45deg);
+  border: 1px solid #fdf2f8;
+}
+
+body.cb-mode .hz-status-dot.cb-dot-stop {
+  border-radius: 1px;
+  border: 1px solid #e0f2fe;
+}

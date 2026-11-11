@@ -42,6 +42,10 @@ __STYLES__
         <input type="checkbox" id="chkAdvBallistics" />
         <span>ACE3 G1–G8 Drag</span>
       </label>
+      <label class="hdr-toggle" id="lblColorblindToggle" title="Okabe–Ito colorblind-safe high-contrast palette (Cyan / Gold / Magenta + shape &amp; pattern cues)">
+        <input type="checkbox" id="chkColorblindMode" />
+        <span>CB Safe</span>
+      </label>
       <div class="hdr-inline-num" title="ACE3 playerDamageThreshold / AIDamageThreshold">
         <span>Trauma Mult</span>
         <input type="number" id="inpDamageThreshold" value="1.0" min="0.2" max="10" step="0.1" />
